@@ -1,0 +1,191 @@
+## This file is part of the black magic probe test firmware archive.
+##
+## Copyright (C) 2022 Rachel Mant <git@dragonmux.network>
+## All rights reserved.
+##
+## Redistribution and use in source and binary forms, with or without
+## modification, are permitted provided that the following conditions are met:
+##
+## 1. Redistributions of source code must retain the above copyright notice, this
+##    list of conditions and the following disclaimer.
+##
+## 2. Redistributions in binary form must reproduce the above copyright notice,
+##    this list of conditions and the following disclaimer in the documentation
+##    and/or other materials provided with the distribution.
+##
+## 3. Neither the name of the copyright holder nor the names of its
+##    contributors may be used to endorse or promote products derived from
+##    this software without specific prior written permission.
+##
+## THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+## AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+## IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+## DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+## FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+## DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+## SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+## CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+## OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+## OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Be silent per default, but 'make V=1' will show all compiler calls.
+ifneq ($(V),1)
+Q           := @
+NULL        := 2>/dev/null
+endif
+
+###############################################################################
+# Executables
+
+PREFIX      ?= arm-none-eabi
+
+CC          := $(PREFIX)-gcc
+CXX         := $(PREFIX)-g++
+LD          := $(PREFIX)-g++
+AR          := $(PREFIX)-ar
+AS          := $(PREFIX)-as
+OBJCOPY     := $(PREFIX)-objcopy
+OBJDUMP     := $(PREFIX)-objdump
+GDB         := $(PREFIX)-gdb
+DFUUTIL     := $(shell which dfu-util 2> /dev/null)
+
+###############################################################################
+# Source files
+
+LDSCRIPT    ?= $(BINARY).ld
+
+OBJS        += $(BINARY).o
+
+INCLUDE_DIR	= .
+
+###############################################################################
+# C flags
+
+# Disabled Optimization as it does muddy the water when you try to step thourgh
+# the program in GDB
+#CFLAGS     += -Os
+CFLAGS      += -g
+CFLAGS      += -Wundef -Wextra -Wshadow -Wimplicit-function-declaration
+CFLAGS      += -Wredundant-decls -Wmissing-prototypes -Wstrict-prototypes
+CFLAGS      += -fno-common -ffunction-sections -fdata-sections -ffreestanding
+
+###############################################################################
+# C++ flags
+
+# Disabled Optimization as it does muddy the water when you try to step thourgh
+# the program in GDB
+#CXXFLAGS   += -O0
+CXXFLAGS    += -g
+CXXFLAGS    += -std=c++17
+CXXFLAGS    += -Wall -Wextra -Wpedantic
+CXXFLAGS    += -fvisibility=hidden -fvisibility-inlines-hidden -fdiagnostics-color=always
+CXXFLAGS    += -ffunction-sections -fdata-sections -ffreestanding -fno-exceptions -fno-rtti
+
+###############################################################################
+# C & C++ preprocessor common flags
+
+CPPFLAGS    += -MD
+CPPFLAGS    += -Wall
+CPPFLAGS    += -I$(INCLUDE_DIR) $(DEFS)
+
+###############################################################################
+# Linker flags
+
+LDFLAGS     += --static -nostartfiles
+LDFLAGS     += -T$(LDSCRIPT)
+LDFLAGS     += -Wl,-Map=$(*).map
+LDFLAGS     += -Wl,--as-needed -Wl,--no-undefined -Wl,--gc-sections
+ifeq ($(V),99)
+LDFLAGS     += -Wl,--print-gc-sections
+endif
+LDFLAGS     += -Wl,--print-memory-usage
+
+###############################################################################
+###############################################################################
+###############################################################################
+
+.SUFFIXES: .elf .bin .hex .srec .list .map .images
+.SECONDEXPANSION:
+.SECONDARY:
+
+all: elf
+
+elf: $(BINARY).elf
+bin: $(BINARY).bin
+hex: $(BINARY).hex
+srec: $(BINARY).srec
+list: $(BINARY).list
+
+images: $(BINARY).images
+flash: $(BINARY).flash
+dfu-flash: $(BINARY).dfu-flash
+
+$(LDSCRIPT):
+    ifeq (,$(wildcard $(LDSCRIPT)))
+	$(error Unable to find specified linker script: $(LDSCRIPT))
+    endif
+
+%.images: %.bin %.hex %.srec %.list %.map
+	@printf "*** $* images generated ***\n"
+
+%.bin: %.elf
+	@printf "  OBJCOPY $(*).bin\n"
+	$(Q)$(OBJCOPY) -Obinary $(*).elf $(*).bin
+
+%.hex: %.elf
+	@printf "  OBJCOPY $(*).hex\n"
+	$(Q)$(OBJCOPY) -Oihex $(*).elf $(*).hex
+
+%.srec: %.elf
+	@printf "  OBJCOPY $(*).srec\n"
+	$(Q)$(OBJCOPY) -Osrec $(*).elf $(*).srec
+
+%.list: %.elf
+	@printf "  OBJDUMP $(*).list\n"
+	$(Q)$(OBJDUMP) -S $(*).elf > $(*).list
+
+%.elf %.map: $(OBJS) $(LDSCRIPT) $(LOCM_LIB)
+	@printf "  LD      $(*).elf\n"
+	$(Q)$(LD) $(LDFLAGS) $(ARCH_FLAGS) $(OBJS) -o $(*).elf
+
+%.o: %.c $(LOCM_LIB)
+	@printf "  CC      $(*).c\n"
+	$(Q)$(CC) $(CFLAGS) $(CPPFLAGS) $(ARCH_FLAGS) -o $(*).o -c $(*).c
+
+%.o: %.cxx $(LOCM_LIB)
+	@printf "  CXX     $(*).cxx\n"
+	$(Q)$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(ARCH_FLAGS) -o $(*).o -c $(*).cxx
+
+%.o: %.cpp $(LOCM_LIB)
+	@printf "  CXX     $(*).cpp\n"
+	$(Q)$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(ARCH_FLAGS) -o $(*).o -c $(*).cpp
+
+clean:
+	@printf "  CLEAN\n"
+	$(Q)$(RM) *.o *.d *.elf *.bin *.hex *.srec *.list *.map
+
+%.dfu-flash: %.bin
+	@printf " FLASH $<\n"
+	$(Q)$(DFUUTIL) -a 0 -i 0 -s 0x08000000:leave -D $(*).bin
+
+ifeq ($(BMP_PORT),)
+BMP_PORT_CANDIDATES := $(wildcard \
+/dev/serial/by-id/usb-Black_Sphere_Technologies_Black_Magic_Probe_*-if00 \
+/dev/cu.usbmodem*1)
+ifeq ($(words $(BMP_PORT_CANDIDATES)),1)
+BMP_PORT := $(BMP_PORT_CANDIDATES)
+else
+BMP_PORT = $(error Black Magic Probe gdb serial port not found, please provide the device name via the BMP_PORT variable parameter$(if \
+$(BMP_PORT_CANDIDATES), (found $(BMP_PORT_CANDIDATES))))
+endif
+endif
+%.flash: %.elf
+	@printf "  BMP $(BMP_PORT) $(*).elf (flash)\n"
+	$(Q)$(GDB) -nx --batch \
+		   -ex 'target extended-remote $(BMP_PORT)' \
+		   -x $(SCRIPT_DIR)/black_magic_probe_flash.scr \
+		   $(*).elf
+
+.PHONY: images clean elf bin hex srec list
+
+-include $(OBJS:.o=.d)
