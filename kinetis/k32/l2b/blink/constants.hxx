@@ -39,11 +39,26 @@ namespace vals
 {
 	namespace sim
 	{
-		constexpr static uint32_t clockGateCtrl1PortA{0x00000200};
-		constexpr static uint32_t clockGateCtrl1PortB{0x00000400};
-		constexpr static uint32_t clockGateCtrl1PortC{0x00000800};
-		constexpr static uint32_t clockGateCtrl1PortD{0x00001000};
-		constexpr static uint32_t clockGateCtrl1PortE{0x00002000};
+		constexpr static uint32_t clockGateCtrl1PortA{0x00000200U};
+		constexpr static uint32_t clockGateCtrl1PortB{0x00000400U};
+		constexpr static uint32_t clockGateCtrl1PortC{0x00000800U};
+		constexpr static uint32_t clockGateCtrl1PortD{0x00001000U};
+		constexpr static uint32_t clockGateCtrl1PortE{0x00002000U};
+
+		constexpr static uint32_t copCtrlClkSelBus{0x000000C0U};
+		constexpr static uint32_t copCtrlClkSelOscEr{0x00000080U};
+		constexpr static uint32_t copCtrlClkSelMCGIR{0x00000040U};
+		constexpr static uint32_t copCtrlClkSelLPO{0x00000000U};
+		constexpr static uint32_t copCtrlDebugEn{0x00000020U};
+		constexpr static uint32_t copCtrlStopEn{0x00000010U};
+		constexpr static uint32_t copCtrlTimeoutHigh{0x0000000CU};
+		constexpr static uint32_t copCtrlTimeoutMedium{0x00000008U};
+		constexpr static uint32_t copCtrlTimeoutLow{0x00000004U};
+		constexpr static uint32_t copCtrlDisabled{0x00000000U};
+		constexpr static uint32_t copCtrlTimeoutLong{0x00000002U};
+		constexpr static uint32_t copCtrlTimeoutShort{0x00000000U};
+		constexpr static uint32_t copCtrlModeWindowed{0x00000001U};
+		constexpr static uint32_t copCtrlModeNormal{0x00000000U};
 	} // namespace sim
 } // namespace vals
 

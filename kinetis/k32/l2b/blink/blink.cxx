@@ -36,6 +36,8 @@
 
 static void clock_setup()
 {
+	// Disable the WDT
+	sim.copCtrl = vals::sim::copCtrlDisabled;
 	// Enable PortC clocking
 	sim.clockGateCtrl[1] |= vals::sim::clockGateCtrl1PortC;
 }

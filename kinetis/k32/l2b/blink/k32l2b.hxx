@@ -62,6 +62,7 @@ namespace k32l2b
 		volatile uint32_t copCtrl;
 		volatile uint32_t serviceCOP;
 	};
+	static_assert(sizeof(sim_t) == 4360U);
 
 	struct gpio_t final
 	{
@@ -72,20 +73,21 @@ namespace k32l2b
 		const volatile uint32_t dataIn;
 		volatile uint32_t dir;
 	};
+	static_assert(sizeof(gpio_t) == 24U);
 
-	constexpr static uintptr_t simBase{0x40047000U};
+	constexpr static uintptr_t simBase{0x4004'7000U};
 
-	constexpr static uintptr_t gpioABase{0x400FF000U};
-	constexpr static uintptr_t gpioBBase{0x400FF040U};
-	constexpr static uintptr_t gpioCBase{0x400FF080U};
-	constexpr static uintptr_t gpioDBase{0x400FF0C0U};
-	constexpr static uintptr_t gpioEBase{0x400FF100U};
+	constexpr static uintptr_t gpioABase{0x400F'F000U};
+	constexpr static uintptr_t gpioBBase{0x400F'F040U};
+	constexpr static uintptr_t gpioCBase{0x400F'F080U};
+	constexpr static uintptr_t gpioDBase{0x400F'F0C0U};
+	constexpr static uintptr_t gpioEBase{0x400F'F100U};
 
-	constexpr static uintptr_t fgpioABase{0xF8000000U};
-	constexpr static uintptr_t fgpioBBase{0xF8000040U};
-	constexpr static uintptr_t fgpioCBase{0xF8000080U};
-	constexpr static uintptr_t fgpioDBase{0xF80000C0U};
-	constexpr static uintptr_t fgpioEBase{0xF8000100U};
+	constexpr static uintptr_t fgpioABase{0xF800'0000U};
+	constexpr static uintptr_t fgpioBBase{0xF800'0040U};
+	constexpr static uintptr_t fgpioCBase{0xF800'0080U};
+	constexpr static uintptr_t fgpioDBase{0xF800'00C0U};
+	constexpr static uintptr_t fgpioEBase{0xF800'0100U};
 } // namespace k32l2b
 
 // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
