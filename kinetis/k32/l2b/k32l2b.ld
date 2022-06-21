@@ -59,6 +59,7 @@ SECTIONS
 		*(.init_array.* .ctors.*)
 		KEEP(*(.init_array .ctors))
 		PROVIDE(endCtors = .);
+		. = ALIGN(4);
 		ASSERT(. <= 0x400, "Error: constructors and init block too large");
 		. = 0x400;
 		KEEP(*(.flash_config))

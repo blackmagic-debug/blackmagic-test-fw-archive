@@ -30,11 +30,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cstddef>
 #include "platform.hxx"
 #include "constants.hxx"
 #include "k32l2b.hxx"
 
-static void clock_setup()
+static void clockSetup()
 {
 	// Disable the WDT
 	sim.copCtrl = vals::sim::copCtrlDisabled;
@@ -55,7 +56,7 @@ static void clock_setup()
 	sim.clockGateCtrl[1] |= vals::sim::clockGateCtrl1PortC;
 }
 
-static void gpio_setup()
+static void gpioSetup()
 {
 	// Make sure PortC[1..3] are set high to keep the LEDs off
 	fgpioC.bitSet = 7;
@@ -65,11 +66,13 @@ static void gpio_setup()
 
 void run()
 {
-	clock_setup();
-	gpio_setup();
+	clockSetup();
+	gpioSetup();
 
 	while (true) {
 		// Toggle PC1 on and off which makes the red part of the RGB LED blink.
 		fgpioC.bitToggle = 1;
+		for (volatile size_t i = 0; i < 1000000U; ++i)
+			continue;
 	}
 }
