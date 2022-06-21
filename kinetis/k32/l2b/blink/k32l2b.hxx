@@ -64,6 +64,19 @@ namespace k32l2b
 	};
 	static_assert(sizeof(sim_t) == 4360U);
 
+	struct mcg_t final
+	{
+		volatile uint8_t ctrl1;
+		volatile uint8_t ctrl2;
+		std::array<const volatile uint8_t, 4> reserved1;
+		const volatile uint8_t status;
+		const volatile uint8_t reserved2;
+		volatile uint8_t statusCtrl;
+		std::array<const volatile uint8_t, 15> reserved3;
+		volatile uint8_t miscCtrl;
+	};
+	static_assert(sizeof(mcg_t) == 25U);
+
 	struct gpio_t final
 	{
 		volatile uint32_t dataOut;
@@ -76,6 +89,8 @@ namespace k32l2b
 	static_assert(sizeof(gpio_t) == 24U);
 
 	constexpr static uintptr_t simBase{0x4004'7000U};
+
+	constexpr static uintptr_t mcgBase{0x4006'4000U};
 
 	constexpr static uintptr_t gpioABase{0x400F'F000U};
 	constexpr static uintptr_t gpioBBase{0x400F'F040U};
@@ -93,6 +108,8 @@ namespace k32l2b
 // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 static auto &sim{*reinterpret_cast<k32l2b::sim_t *>(k32l2b::simBase)};
+
+static auto &mcg{*reinterpret_cast<k32l2b::mcg_t *>(k32l2b::mcgBase)};
 
 static auto &gpioA{*reinterpret_cast<k32l2b::gpio_t *>(k32l2b::gpioABase)};
 static auto &gpioB{*reinterpret_cast<k32l2b::gpio_t *>(k32l2b::gpioBBase)};

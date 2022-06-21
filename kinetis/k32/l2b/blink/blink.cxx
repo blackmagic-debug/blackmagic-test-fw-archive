@@ -38,6 +38,19 @@ static void clock_setup()
 {
 	// Disable the WDT
 	sim.copCtrl = vals::sim::copCtrlDisabled;
+	// Switch into HIRC mode as we want to go LIRC 8MHz -> 2MHz and this must be done indirectly.
+	mcg.miscCtrl = vals::mcg::miscCtrlHIRClkEnabled | vals::mcg::miscCtrlLIRClkDiv1;
+	while ((mcg.status & vals::mcg::statusClkModeMask) != vals::mcg::statusClkModeHIRC)
+		mcg.ctrl1 = vals::mcg::ctrl1ClkModeHIRC | vals::mcg::ctrl1IRefClkEnabled;
+	// Configure the clock as the 2MHz low-precision internal reference
+	mcg.ctrl2 = vals::mcg::ctrl2LIRC2MHz;
+	mcg.statusCtrl = vals::mcg::statusCtrlLIRClkDiv1;
+	mcg.miscCtrl = vals::mcg::miscCtrlHIRClkEnabled | vals::mcg::miscCtrlLIRClkDiv1;
+	while ((mcg.status & vals::mcg::statusClkModeMask) != vals::mcg::statusClkModeLIRC)
+		mcg.ctrl1 = vals::mcg::ctrl1ClkModeLIRC | vals::mcg::ctrl1IRefClkEnabled |
+			vals::mcg::ctrl1IRefStopEnabled;
+	// And clean up.
+	mcg.miscCtrl = vals::mcg::miscCtrlHIRClkDisabled | vals::mcg::miscCtrlLIRClkDiv1;
 	// Enable PortC clocking
 	sim.clockGateCtrl[1] |= vals::sim::clockGateCtrl1PortC;
 }

@@ -60,6 +60,53 @@ namespace vals
 		constexpr static uint32_t copCtrlModeWindowed{0x00000001U};
 		constexpr static uint32_t copCtrlModeNormal{0x00000000U};
 	} // namespace sim
+
+	namespace mcg
+	{
+		constexpr static uint8_t ctrl1ClkModeReserved{0xC0U};
+		constexpr static uint8_t ctrl1ClkModeExternal{0x80U};
+		constexpr static uint8_t ctrl1ClkModeLIRC{0x40U};
+		constexpr static uint8_t ctrl1ClkModeHIRC{0x00U};
+		constexpr static uint8_t ctrl1IRefClkEnabled{0x02U};
+		constexpr static uint8_t ctrl1IRefClkDisabled{0x00U};
+		constexpr static uint8_t ctrl1IRefStopEnabled{0x01U};
+		constexpr static uint8_t ctrl1IRefStopDisabled{0x00U};
+
+		constexpr static uint8_t ctrl2RangeVHF{0x20U};
+		constexpr static uint8_t ctrl2RangeHF{0x10U};
+		constexpr static uint8_t ctrl2RangeLF{0x00U};
+		constexpr static uint8_t ctrl2OscModeHG{0x08U};
+		constexpr static uint8_t ctrl2OscModeLP{0x00U};
+		constexpr static uint8_t ctrl2ERefOsc{0x04U};
+		constexpr static uint8_t ctrl2ERefExt{0x00U};
+		constexpr static uint8_t ctrl2LIRC8MHz{0x01U};
+		constexpr static uint8_t ctrl2LIRC2MHz{0x00U};
+
+		constexpr static uint8_t statusClkModeMask{0x0CU};
+		constexpr static uint8_t statusClkModeExt{0x08U};
+		constexpr static uint8_t statusClkModeLIRC{0x04U};
+		constexpr static uint8_t statusClkModeHIRC{0x00U};
+
+		constexpr static uint8_t statusCtrlLIRClkDiv128{0x0EU};
+		constexpr static uint8_t statusCtrlLIRClkDiv64{0x0CU};
+		constexpr static uint8_t statusCtrlLIRClkDiv32{0x0AU};
+		constexpr static uint8_t statusCtrlLIRClkDiv16{0x08U};
+		constexpr static uint8_t statusCtrlLIRClkDiv8{0x06U};
+		constexpr static uint8_t statusCtrlLIRClkDiv4{0x04U};
+		constexpr static uint8_t statusCtrlLIRClkDiv2{0x02U};
+		constexpr static uint8_t statusCtrlLIRClkDiv1{0x00U};
+
+		constexpr static uint8_t miscCtrlHIRClkEnabled{0x80U};
+		constexpr static uint8_t miscCtrlHIRClkDisabled{0x80U};
+		constexpr static uint8_t miscCtrlLIRClkDiv128{0x07U};
+		constexpr static uint8_t miscCtrlLIRClkDiv64{0x06U};
+		constexpr static uint8_t miscCtrlLIRClkDiv32{0x05U};
+		constexpr static uint8_t miscCtrlLIRClkDiv16{0x04U};
+		constexpr static uint8_t miscCtrlLIRClkDiv8{0x03U};
+		constexpr static uint8_t miscCtrlLIRClkDiv4{0x02U};
+		constexpr static uint8_t miscCtrlLIRClkDiv2{0x01U};
+		constexpr static uint8_t miscCtrlLIRClkDiv1{0x00U};
+	} // namespace mcg
 } // namespace vals
 
 #endif /*CONSTANTS_HXX*/
