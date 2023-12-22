@@ -1,3 +1,4 @@
 [submodule "libs/locm3"]
 	path = libs/locm3
-	url = git@github.com:libopencm3/libopencm3.git
+	url = https://github.com/blackmagic-debug/libopencm3
+	branch = main
