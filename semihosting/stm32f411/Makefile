@@ -34,6 +34,7 @@ ARCH_FLAGS = -mthumb -mcpu=cortex-m4 $(FP_FLAGS)
 CPPFLAGS   += -I../../libs/substrate
 CFLAGS     += -std=c11 -O3
 CXXFLAGS   += -std=c++17 -Wall -Wpedantic -O3
+LDFLAGS    += -Wl,--print-memory-usage
 
 BINARY = semihosting
 OBJS += syscalls.o hostConsole.o
