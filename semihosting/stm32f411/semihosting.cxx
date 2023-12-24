@@ -40,6 +40,17 @@ using namespace std::literals::string_view_literals;
 using semihosting::types::SemihostingResult;
 using semihosting::host::console::host;
 
+// Compute the length of a (hopefully) nul terminated string stored in `storage`, bounded on the storage size
+template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> &storage) noexcept
+{
+	for (size_t index = 0; index < N; ++index)
+	{
+		if (storage[index] == '\0')
+			return index;
+	}
+	return N;
+}
+
 [[nodiscard]] static bool testReadCommandLine() noexcept
 {
 	host.info("Testing SYS_GET_CMDLINE"sv);
@@ -49,12 +60,12 @@ using semihosting::host::console::host;
 		host.error("SYS_GET_CMDLINE failed"sv);
 		return false;
 	}
-	std::string_view commandLine{commandLineBuffer.data(), commandLineBuffer.size()};
-	const auto result{commandLine == "how meow brown cow"sv};
+	std::string_view commandLine{commandLineBuffer.data(), strlen(commandLineBuffer)};
+	const auto result{commandLine == " how meow brown cow"sv};
 	if (result)
 		host.notice("SYS_GET_CMDLINE success"sv);
 	else
-		host.error("Wrong command line string value: "sv, commandLine);
+		host.error("Wrong command line string value: '"sv, commandLine, "'"sv);
 	return result;
 }
 
