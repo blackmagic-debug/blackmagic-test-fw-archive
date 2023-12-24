@@ -65,11 +65,23 @@ using semihosting::host::console::host;
 
 int main(int, char **)
 {
+	// Try to open the host's console interface, and if that fails, return as there's nothing more can be done
+	if (!host.openConsole())
+		return 1;
 	host.notice("Testing semihosting support"sv);
 	if (testSemihosting())
 		host.notice("Test complete (success)"sv);
 	else
 		host.error("Test failed"sv);
+
+	// Try to close the host's console interface, and if that fails return so the test restarts
+	if (!host.closeConsole())
+	{
+		// NB: we close first the stdin side then the stdout, so in this case the stdout side should still
+		// be valid and we can try to write some sort of error string
+		host.error("Failed to shut down host console interface");
+		return 1;
+	}
 
 	while (true)
 		__asm__("wfi");

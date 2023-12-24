@@ -41,11 +41,18 @@ namespace semihosting::host::console
 {
 	Console host{};
 
-	bool Console::open() noexcept
+	bool Console::openConsole() noexcept
 	{
 		fdFromHost = semihosting::open(":tt"sv, OpenMode::read);
 		fdToHost = semihosting::open(":tt"sv, OpenMode::write);
 		return fdFromHost != -1 && fdToHost != -1;
+	}
+
+	bool Console::closeConsole() noexcept
+	{
+		return
+			semihosting::close(fdFromHost) == SemihostingResult::success &&
+			semihosting::close(fdToHost) == SemihostingResult::success;
 	}
 
 	void Console::write(const std::string_view &value) const noexcept

@@ -70,8 +70,11 @@ namespace semihosting
 		return semihostingSyscall(Syscall::open, params);
 	}
 
-	int32_t close(const int32_t fd) noexcept
-		{ return semihostingSyscall(Syscall::close, &fd); }
+	types::SemihostingResult close(const int32_t fd) noexcept
+	{
+		const auto result{semihostingSyscall(Syscall::close, &fd)};
+		return static_cast<SemihostingResult>(result);
+	}
 
 	int32_t writeChar(const char chr) noexcept
 		{ return semihostingSyscall(Syscall::writeChar, &chr); }

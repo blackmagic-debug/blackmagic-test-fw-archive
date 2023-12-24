@@ -54,7 +54,8 @@ namespace semihosting::host::console
 
 	public:
 		Console() noexcept = default;
-		[[nodiscard]] bool open() noexcept;
+		[[nodiscard]] bool openConsole() noexcept;
+		[[nodiscard]] bool closeConsole() noexcept;
 
 		void writeln() const noexcept
 			{ write("\n"sv); }

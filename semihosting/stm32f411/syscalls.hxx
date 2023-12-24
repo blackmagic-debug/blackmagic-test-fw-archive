@@ -43,7 +43,7 @@
 namespace semihosting
 {
 	[[nodiscard]] int32_t open(const std::string_view &path, types::OpenMode mode) noexcept;
-	[[nodiscard]] int32_t close(int32_t fd) noexcept;
+	[[nodiscard]] types::SemihostingResult close(int32_t fd) noexcept;
 	[[nodiscard]] int32_t writeChar(char chr) noexcept;
 	[[nodiscard]] int32_t write(const char *string) noexcept;
 	[[nodiscard]] int32_t write(int32_t fd, const substrate::span<const uint8_t> &data) noexcept;
