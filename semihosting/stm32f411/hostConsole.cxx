@@ -56,21 +56,25 @@ namespace semihosting::host::console
 	}
 
 	void Console::write(const std::string_view &value) const noexcept
-		{ static_cast<void>(semihosting::write(value.data())); }
+	{
+		const auto endChar{value.back() == '\0' ? value.length() - 1U : value.length()};
+		const substrate::span data{reinterpret_cast<const uint8_t *>(value.data()), endChar};
+		static_cast<void>(semihosting::write(fdToHost, data));
+	}
 
 	// Output `[!]` in red
 	void Console::errorPrefix() const noexcept
-		{ write("\x1b[31m[!]\x1b[0m"sv); }
+		{ write("\x1b[31m[!]\x1b[0m "sv); }
 
 	// Output `[*]` in yellow/brown
 	void Console::warningPrefix() const noexcept
-		{ write("\x1b[33m[*]\x1b[0m"sv); }
+		{ write("\x1b[33m[*]\x1b[0m "sv); }
 
 	// Output `[~]` in green
 	void Console::noticePrefix() const noexcept
-		{ write("\x1b[32m[~]\x1b[0m"sv); }
+		{ write("\x1b[32m[~]\x1b[0m "sv); }
 
 	// Output `[~]` in cyan
 	void Console::infoPrefix() const noexcept
-		{ write("\x1b[36m[~]\x1b[0m"sv); }
+		{ write("\x1b[36m[~]\x1b[0m "sv); }
 } // namespace host

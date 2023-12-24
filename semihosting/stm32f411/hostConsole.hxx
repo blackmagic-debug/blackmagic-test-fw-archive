@@ -58,7 +58,7 @@ namespace semihosting::host::console
 		[[nodiscard]] bool closeConsole() noexcept;
 
 		void writeln() const noexcept
-			{ write("\n"sv); }
+			{ write("\r\n"sv); }
 
 		template<typename Value, typename... Values> void writeln(Value && value, Values &&...values) const noexcept
 		{
