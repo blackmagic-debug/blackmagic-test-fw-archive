@@ -2,3 +2,7 @@
 	path = libs/locm3
 	url = https://github.com/blackmagic-debug/libopencm3
 	branch = main
+[submodule "libs/substrate"]
+	path = libs/substrate
+	url = https://github.com/bad-alloc-heavy-industries/substrate
+	branch = main
