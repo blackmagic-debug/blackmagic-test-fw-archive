@@ -36,11 +36,14 @@
 #include "hostConsole.hxx"
 
 using namespace std::literals::string_view_literals;
+using semihosting::types::OpenMode;
 using semihosting::types::SemihostingResult;
 using semihosting::host::console::host;
 
 constexpr static int32_t stdinFD{1};
 constexpr static int32_t stdoutFD{3};
+constexpr static size_t featuresMinLength{4U};
+constexpr static std::array<char, 4> featuresMagic{{'S', 'H', 'F', 'B'}};
 
 // Compute the length of a (hopefully) nul terminated string stored in `storage`, bounded on the storage size
 template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> &storage) noexcept
@@ -53,6 +56,7 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	return N;
 }
 
+// Test the retrieval of the command line from GDB
 [[nodiscard]] static bool testReadCommandLine() noexcept
 {
 	host.info("Testing SYS_GET_CMDLINE"sv);
@@ -71,6 +75,7 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	return result;
 }
 
+// Test to verify that we can close and open the host TTY handles properly
 [[nodiscard]] static bool testConsoleHandles() noexcept
 {
 	host.info("Testing SYS_CLOSE on special name ", "':tt'"sv);
@@ -97,10 +102,66 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	return host.stdinFD() == stdinFD && host.stdoutFD() == stdoutFD;
 }
 
+// Test to validate the special file `:semihosting-features` can be opened, read,
+// and the contents make sense
+[[nodiscard]] static bool testSemihostingFeatures() noexcept
+{
+	host.info("Testing access to special name ':semihosting-features'"sv);
+	host.info("Trying SYS_OPEN on "sv, "':semihosting-features'"sv);
+	// Start by opening the special file
+	const auto featuresFD{semihosting::open(":semihosting-features"sv, OpenMode::read)};
+	if (featuresFD <= 0)
+	{
+		host.error("SYS_OPEN failed"sv);
+		return false;
+	}
+	host.notice("SYS_OPEN success"sv);
+	// Now try to check how long the file is and make sure it's at least the minimum lenght
+	host.info("Trying SYS_FLEN on "sv, "':semihosting-features'"sv);
+	const auto fileLength{semihosting::fileLength(featuresFD)};
+	if (fileLength < 0 || static_cast<size_t>(fileLength) < featuresMinLength)
+	{
+		host.error("SYS_FLEN failed, file "sv, fileLength == -1 ? "length couldn't be determined"sv : "too short"sv);
+		if (semihosting::close(featuresFD) != SemihostingResult::success)
+			host.error("Additionally SYS_CLOSE failed"sv);
+		return false;
+	}
+	host.notice("SYS_FLEN success"sv);
+	// Try to read out the magic number for the file
+	std::array<char, 4> magic{};
+	host.info("Trying SYS_READ on "sv, "':semihosting-features'"sv);
+	if (semihosting::read(featuresFD, substrate::span{magic}) != 0)
+	{
+		host.error("SYS_READ failed"sv);
+		if (semihosting::close(featuresFD) != SemihostingResult::success)
+			host.error("Additionally SYS_CLOSE failed"sv);
+		return false;
+	}
+	host.notice("SYS_READ success"sv);
+	if (magic != featuresMagic)
+	{
+		host.error("Invalid "sv, "':semihosting-features'"sv, " magic number"sv);
+		if (semihosting::close(featuresFD) != SemihostingResult::success)
+			host.error("Additionally SYS_CLOSE failed"sv);
+		return false;
+	}
+
+	host.info("Trying SYS_CLOSE on "sv, "':semihosting-features'"sv);
+	if (semihosting::close(featuresFD) != SemihostingResult::success)
+	{
+		host.error("SYS_CLOSE failed");
+		return false;
+	};
+	host.notice("SYS_CLOSE success"sv);
+	host.notice("Access to "sv, "':semihosting-features'"sv, " successful"sv);
+	return true;
+}
+
 [[nodiscard]] static bool testSemihosting() noexcept
 {
 	return testReadCommandLine() &&
-		testConsoleHandles();
+		testConsoleHandles() &&
+		testSemihostingFeatures();
 }
 
 int main(int, char **)
