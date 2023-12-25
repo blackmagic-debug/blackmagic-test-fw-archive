@@ -96,6 +96,7 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 		return false;
 	}
 	host.notice("SYS_OPEN success"sv);
+	host.info("SYS_OPEN returned FDs "sv, host.stdinFD(), ", and "sv, host.stdoutFD(), " for console I/O"sv);
 	// Check and make sure that the handles returned are actually for the right console parts
 	if (host.stdinFD() != stdinFD || host.stdoutFD() != stdoutFD)
 		host.error("Improper I/O handles returned for special name "sv, "':tt'"sv);
