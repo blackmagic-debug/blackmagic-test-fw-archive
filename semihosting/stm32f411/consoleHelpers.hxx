@@ -30,58 +30,64 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <string_view>
-#include "syscalls.hxx"
-#include "hostConsole.hxx"
-#include "consoleHelpers.hxx"
+#ifndef CONSOLE_HELPERS_HXX
+#define CONSOLE_HELPERS_HXX
 
-using namespace std::literals::string_view_literals;
-using namespace semihosting::types;
+#include <type_traits>
+#include <substrate/promotion_helpers>
+#include "syscalls.hxx"
 
 namespace semihosting::host::console
 {
-	Console host{};
-
-	bool Console::openConsole() noexcept
+	template<typename Int> struct AsInt final
 	{
-		fdFromHost = semihosting::open(":tt"sv, OpenMode::read);
-		fdToHost = semihosting::open(":tt"sv, OpenMode::write);
-		return fdFromHost != -1 && fdToHost != -1;
-	}
+	private:
+		using UInt = substrate::promoted_type_t<std::make_unsigned_t<Int>>;
+		Int _value;
 
-	bool Console::closeConsole() noexcept
-	{
-		return
-			semihosting::close(fdFromHost) == SemihostingResult::success &&
-			semihosting::close(fdToHost) == SemihostingResult::success;
-	}
+		[[gnu::noinline]] UInt formatTo(const int32_t fd, const UInt number) const noexcept
+		{
+			if (number < 10)
+				static_cast<void>(writeChar(static_cast<char>(number + '0')));
+			else
+			{
+				const auto digit{number - formatTo(fd, number / 10U) * 10U};
+				static_cast<void>(writeChar(static_cast<char>(digit + '0')));
+			}
+			return number;
+		}
 
-	void Console::write(const std::string_view &value) const noexcept
-	{
-		const auto endChar{value.back() == '\0' ? value.length() - 1U : value.length()};
-		const substrate::span data{value.data(), endChar};
-		static_cast<void>(semihosting::write(fdToHost, data));
-	}
+		template<typename T> std::enable_if_t<std::is_same_v<T, Int> &&
+			std::is_integral_v<T> && !std::is_same_v<T, bool> && std::is_unsigned_v<T>>
+				printTo(const int32_t fd) const noexcept
+			{ formatTo(fd, _value); }
 
-	void Console::write(const int64_t value) const noexcept
-		{ AsInt{value}.convert(fdToHost); }
+		template<typename T> [[gnu::noinline]] std::enable_if_t<std::is_same_v<T, Int> &&
+			std::is_integral_v<T> && !std::is_same_v<T, bool> && std::is_signed_v<T>>
+				printTo(const int32_t fd) const noexcept
+		{
+			if (_value < 0)
+			{
+				static_cast<void>(writeChar('-'));
+				formatTo(fd, ~static_cast<UInt>(_value) + 1U);
+			}
+			else
+				formatTo(fd, static_cast<UInt>(_value));
+		}
 
-	void Console::write(const uint64_t value) const noexcept
-		{ AsInt{value}.convert(fdToHost); }
+	public:
+		constexpr AsInt(const Int value) noexcept : _value{value} { }
+		constexpr AsInt(const AsInt &) noexcept = default;
+		constexpr AsInt(AsInt &&) noexcept = default;
+		~AsInt() noexcept = default;
+		constexpr AsInt &operator =(const AsInt &) noexcept = default;
+		constexpr AsInt &operator =(AsInt &&) noexcept = default;
 
-	// Output `[!]` in red
-	void Console::errorPrefix() const noexcept
-		{ write("\x1b[31m[!]\x1b[0m "sv); }
+		constexpr void convert(const int32_t fd) const noexcept
+			{ printTo<Int>(fd); }
+	};
 
-	// Output `[*]` in yellow/brown
-	void Console::warningPrefix() const noexcept
-		{ write("\x1b[33m[*]\x1b[0m "sv); }
+	template<typename Int> AsInt(const Int) -> AsInt<Int>;
+} // namespace semihosting::host::console
 
-	// Output `[~]` in green
-	void Console::noticePrefix() const noexcept
-		{ write("\x1b[32m[~]\x1b[0m "sv); }
-
-	// Output `[~]` in cyan
-	void Console::infoPrefix() const noexcept
-		{ write("\x1b[36m[~]\x1b[0m "sv); }
-} // namespace host
+#endif /*CONSOLE_HELPERS_HXX*/

@@ -35,10 +35,30 @@
 
 #include <cstdint>
 #include <string_view>
+#include <type_traits>
 
 namespace semihosting::host::console
 {
 	using namespace std::literals::string_view_literals;
+
+	namespace internal
+	{
+		template<typename> struct IsChar : std::false_type { };
+		template<> struct IsChar<char> : std::true_type { };
+
+		template<typename> struct IsBoolean : std::false_type { };
+		template<> struct IsBoolean<bool> : std::true_type { };
+	} // namespace internal
+
+	template<typename T> struct IsChar : std::bool_constant<internal::IsChar<std::remove_cv_t<T>>::value> { };
+	template<typename T> constexpr inline bool isChar = IsChar<T>::value;
+
+	template<typename T> struct IsBoolean : std::bool_constant<internal::IsBoolean<std::remove_cv_t<T>>::value> { };
+	template<typename T> constexpr inline bool isBoolean = IsBoolean<T>::value;
+
+	template<typename T> struct IsNumeric :
+		std::bool_constant<std::is_integral_v<T> && !isBoolean<T> && !isChar<T>> { };
+	template<typename T> constexpr inline bool isNumeric = IsNumeric<T>::value;
 
 	struct Console final
 	{
@@ -47,10 +67,29 @@ namespace semihosting::host::console
 		int32_t fdToHost{-1};
 
 		void write(const std::string_view &value) const noexcept;
+		void write(const int64_t value) const noexcept;
+		void write(const uint64_t value) const noexcept;
 		void errorPrefix() const noexcept;
 		void warningPrefix() const noexcept;
 		void noticePrefix() const noexcept;
 		void infoPrefix() const noexcept;
+
+		template<typename T> std::enable_if_t<isNumeric<T> && !std::is_same_v<T, int64_t> &&
+			std::is_signed_v<T> && !std::is_enum_v<T>> write(const T value) const noexcept
+		{
+			const int64_t widenedValue{value};
+			write(widenedValue);
+		}
+
+		template<typename T> std::enable_if_t<isNumeric<T> && !std::is_same_v<T, int64_t> &&
+			std::is_unsigned_v<T> && !std::is_enum_v<T>> write(const T value) const noexcept
+		{
+			const uint64_t widenedValue{value};
+			write(widenedValue);
+		}
+
+		template<typename T> std::enable_if_t<std::is_enum_v<T>> write(const T value) const noexcept
+			{ write(static_cast<std::underlying_type_t<T>>(value)); }
 
 	public:
 		Console() noexcept = default;
