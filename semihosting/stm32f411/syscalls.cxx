@@ -93,7 +93,7 @@ namespace semihosting
 		return semihostingSyscall(Syscall::write, params);
 	}
 
-	int32_t read(const int32_t fd, substrate::span<uint8_t> &data) noexcept
+	int32_t read(const int32_t fd, substrate::span<uint8_t> data) noexcept
 	{
 		const std::array<uintptr_t, 3> params
 		{{

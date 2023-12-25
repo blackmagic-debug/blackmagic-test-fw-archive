@@ -35,6 +35,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <type_traits>
 #include <string_view>
 #include <substrate/span>
 
@@ -47,7 +48,7 @@ namespace semihosting
 	[[nodiscard]] int32_t writeChar(char chr) noexcept;
 	[[nodiscard]] int32_t write(const char *string) noexcept;
 	[[nodiscard]] int32_t write(int32_t fd, const substrate::span<const uint8_t> &data) noexcept;
-	[[nodiscard]] int32_t read(int32_t fd, substrate::span<uint8_t> &data) noexcept;
+	[[nodiscard]] int32_t read(int32_t fd, substrate::span<uint8_t> data) noexcept;
 	[[nodiscard]] int32_t readChar() noexcept;
 	[[nodiscard]] int32_t isError(int32_t status) noexcept;
 	[[nodiscard]] int32_t isTTY(int32_t fd) noexcept;
@@ -74,11 +75,25 @@ namespace semihosting
 		return read(fd, data);
 	}
 
+	template<typename T, size_t N> [[nodiscard]] static inline std::enable_if_t<!std::is_same_v<T, uint8_t>, int32_t>
+		read(const int32_t fd, substrate::span<T, N> data) noexcept
+	{
+		const substrate::span dataBytes{reinterpret_cast<uint8_t *>(data.data()), data.size_bytes()};
+		return read(fd, dataBytes);
+	}
+
 	[[nodiscard]] static inline int32_t write(const int32_t fd, const void *const dataPointer,
 		const size_t dataLength) noexcept
 	{
 		const substrate::span data{static_cast<const uint8_t *>(dataPointer), dataLength};
 		return write(fd, data);
+	}
+
+	template<typename T, size_t N> [[nodiscard]] static inline std::enable_if_t<!std::is_same_v<T, uint8_t>, int32_t>
+		write(const int32_t fd, const substrate::span<T, N> &data) noexcept
+	{
+		const substrate::span dataBytes{reinterpret_cast<const uint8_t *>(data.data()), data.size_bytes()};
+		return write(fd, dataBytes);
 	}
 } // namespace semihosting
 

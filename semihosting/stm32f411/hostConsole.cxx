@@ -58,7 +58,7 @@ namespace semihosting::host::console
 	void Console::write(const std::string_view &value) const noexcept
 	{
 		const auto endChar{value.back() == '\0' ? value.length() - 1U : value.length()};
-		const substrate::span data{reinterpret_cast<const uint8_t *>(value.data()), endChar};
+		const substrate::span data{value.data(), endChar};
 		static_cast<void>(semihosting::write(fdToHost, data));
 	}
 
