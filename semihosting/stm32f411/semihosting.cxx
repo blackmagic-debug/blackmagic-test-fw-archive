@@ -32,7 +32,6 @@
 
 #include <array>
 #include <string_view>
-#include <arm_acle.h>
 #include "syscalls.hxx"
 #include "hostConsole.hxx"
 
