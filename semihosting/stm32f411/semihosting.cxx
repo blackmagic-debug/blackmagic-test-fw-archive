@@ -186,6 +186,6 @@ int main(int, char **)
 	}
 
 	while (true)
-		__asm__("wfi");
+		__asm__("bkpt #0");
 	return 0;
 }
