@@ -113,7 +113,7 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	const auto featuresFD{semihosting::open(":semihosting-features"sv, OpenMode::read)};
 	if (featuresFD <= 0)
 	{
-		host.error("SYS_OPEN failed"sv);
+		host.error("SYS_OPEN failed: errno = "sv, semihosting::lastErrno());
 		return false;
 	}
 	host.notice("SYS_OPEN success"sv);
