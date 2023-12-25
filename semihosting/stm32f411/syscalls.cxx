@@ -76,11 +76,17 @@ namespace semihosting
 		return static_cast<SemihostingResult>(result);
 	}
 
-	int32_t writeChar(const char chr) noexcept
-		{ return semihostingSyscall(Syscall::writeChar, &chr); }
+	types::SemihostingResult writeChar(const char chr) noexcept
+	{
+		const auto result{semihostingSyscall(Syscall::writeChar, &chr)};
+		return static_cast<SemihostingResult>(result);
+	}
 
-	int32_t write(const char *const string) noexcept
-		{ return semihostingSyscall(Syscall::writeNulStr, string); }
+	types::SemihostingResult write(const char *const string) noexcept
+	{
+		const auto result{semihostingSyscall(Syscall::writeNulStr, string)};
+		return static_cast<SemihostingResult>(result);
+	}
 
 	int32_t write(const int32_t fd, const substrate::span<const uint8_t> &data) noexcept
 	{

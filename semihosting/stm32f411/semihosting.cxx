@@ -177,11 +177,45 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	return true;
 }
 
+[[nodiscard]] static bool testConsoleWrite() noexcept
+{
+	constexpr static auto alphabet{"abcdefghijklmnopqrstuvwxyz\r\n"sv};
+	host.info("Testing SYS_WRITE to stdout"sv);
+	if (semihosting::write(host.stdoutFD(), substrate::span{alphabet}) != 0)
+	{
+		host.error("SYS_WRITE failed"sv);
+		return false;
+	}
+	host.notice("SYS_WRITE success"sv);
+
+	host.info("Testing SYS_WRITE0 to stdout"sv);
+	if (semihosting::write(alphabet.data()) != SemihostingResult::success)
+	{
+		host.error("SYS_WRITE0 failed"sv);
+		return false;
+	}
+	host.notice("SYS_WRITE0 success"sv);
+
+	host.info("Testing SYS_WRITEC"sv);
+	for (const auto chr : alphabet)
+	{
+		if (semihosting::writeChar(chr) != SemihostingResult::success)
+		{
+			host.writeln();
+			host.error("SYS_WRITEC failed"sv);
+			return false;
+		}
+	}
+	host.notice("SYS_WRITEC success"sv);
+	return true;
+}
+
 [[nodiscard]] static bool testSemihosting() noexcept
 {
 	return testReadCommandLine() &&
 		testConsoleHandles() &&
-		testSemihostingFeatures();
+		testSemihostingFeatures() &&
+		testConsoleWrite();
 }
 
 int main(int, char **)
