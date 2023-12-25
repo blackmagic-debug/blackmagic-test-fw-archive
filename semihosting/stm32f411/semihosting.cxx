@@ -41,7 +41,7 @@ using semihosting::types::SemihostingResult;
 using semihosting::host::console::host;
 
 constexpr static int32_t stdinFD{1};
-constexpr static int32_t stdoutFD{3};
+constexpr static int32_t stdoutFD{2};
 constexpr static size_t featuresMinLength{4U};
 constexpr static std::array<char, 4> featuresMagic{{'S', 'H', 'F', 'B'}};
 
