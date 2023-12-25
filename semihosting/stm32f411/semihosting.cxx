@@ -42,7 +42,7 @@ using semihosting::host::console::host;
 
 constexpr static int32_t stdinFD{1};
 constexpr static int32_t stdoutFD{2};
-constexpr static size_t featuresMinLength{4U};
+constexpr static size_t featuresLength{5U};
 constexpr static std::array<char, 4> featuresMagic{{'S', 'H', 'F', 'B'}};
 
 // Compute the length of a (hopefully) nul terminated string stored in `storage`, bounded on the storage size
@@ -117,10 +117,10 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 		return false;
 	}
 	host.notice("SYS_OPEN success"sv);
-	// Now try to check how long the file is and make sure it's at least the minimum lenght
+	// Now try to check how long the file is and make sure it's the correct length for BMD
 	host.info("Trying SYS_FLEN on "sv, "':semihosting-features'"sv);
 	const auto fileLength{semihosting::fileLength(featuresFD)};
-	if (fileLength < 0 || static_cast<size_t>(fileLength) < featuresMinLength)
+	if (static_cast<size_t>(fileLength) != featuresLength)
 	{
 		host.error("SYS_FLEN failed, file "sv, fileLength == -1 ? "length couldn't be determined"sv : "too short"sv);
 		if (semihosting::close(featuresFD) != SemihostingResult::success)
@@ -146,11 +146,30 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 			host.error("Additionally SYS_CLOSE failed"sv);
 		return false;
 	}
+	host.notice("':semihosting-features'"sv, " file magic OK"sv);
+
+	host.info("Checking feature byte"sv);
+	uint8_t supportedFeatures{};
+	if (semihosting::read(featuresFD, {&supportedFeatures, 1U}) != 0)
+	{
+		host.error("SYS_READ failed"sv);
+		if (semihosting::close(featuresFD) != SemihostingResult::success)
+			host.error("Additionally SYS_CLOSE failed"sv);
+		return false;
+	}
+	host.notice("SYS_READ success"sv);
+	// BMD supports extended exit and stdout+stderr through `:tt`
+	if (supportedFeatures != 3U)
+	{
+		host.error("Supported features byte has incorrect value "sv, supportedFeatures);
+		return false;
+	}
+	host.notice("Supported features reported correctly"sv);
 
 	host.info("Trying SYS_CLOSE on "sv, "':semihosting-features'"sv);
 	if (semihosting::close(featuresFD) != SemihostingResult::success)
 	{
-		host.error("SYS_CLOSE failed");
+		host.error("SYS_CLOSE failed"sv);
 		return false;
 	};
 	host.notice("SYS_CLOSE success"sv);
