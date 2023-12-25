@@ -40,6 +40,9 @@ using namespace std::literals::string_view_literals;
 using semihosting::types::SemihostingResult;
 using semihosting::host::console::host;
 
+constexpr static int32_t stdinFD{1};
+constexpr static int32_t stdoutFD{3};
+
 // Compute the length of a (hopefully) nul terminated string stored in `storage`, bounded on the storage size
 template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> &storage) noexcept
 {
@@ -69,9 +72,36 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	return result;
 }
 
+[[nodiscard]] static bool testConsoleHandles() noexcept
+{
+	host.info("Testing SYS_CLOSE on special name ", "':tt'"sv);
+	if (!host.closeConsole())
+	{
+		host.error("SYS_CLOSE failed");
+		return false;
+	}
+	// As per the comment in the fail case, use the fact we don't invalidate our handles to tell it what we're doing
+	host.notice("SYS_CLOSE success"sv);
+	host.info("Testing SYS_OPEN on special name "sv, "':tt'"sv);
+	if (!host.openConsole())
+	{
+		// Nothing we can do here, as we just failed to re-open our only means of talking with the host
+		// Given we don't invalidate our handles in .closeConsole() though, we can try to tell the host
+		// that this failed
+		host.error("SYS_OPEN failed"sv);
+		return false;
+	}
+	host.notice("SYS_OPEN success"sv);
+	// Check and make sure that the handles returned are actually for the right console parts
+	if (host.stdinFD() != stdinFD || host.stdoutFD() != stdoutFD)
+		host.error("Improper I/O handles returned for special name "sv, "':tt'"sv);
+	return host.stdinFD() == stdinFD && host.stdoutFD() == stdoutFD;
+}
+
 [[nodiscard]] static bool testSemihosting() noexcept
 {
-	return testReadCommandLine();
+	return testReadCommandLine() &&
+		testConsoleHandles();
 }
 
 int main(int, char **)

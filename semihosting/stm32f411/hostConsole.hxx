@@ -92,6 +92,9 @@ namespace semihosting::host::console
 			infoPrefix();
 			writeln(std::forward<Values>(values)...);
 		}
+
+		[[nodiscard]] int32_t stdinFD() const noexcept { return fdFromHost; }
+		[[nodiscard]] int32_t stdoutFD() const noexcept { return fdToHost; }
 	};
 
 	extern Console host;
