@@ -113,8 +113,8 @@ namespace semihosting
 	int32_t readChar() noexcept
 		{ return semihostingSyscall(Syscall::readChar, nullptr); }
 
-	int32_t isError(const int32_t status) noexcept
-		{ return semihostingSyscall(Syscall::isError, &status); }
+	bool isError(const int32_t status) noexcept
+		{ return semihostingSyscall(Syscall::isError, &status) != 0; }
 
 	int32_t isTTY(const int32_t fd) noexcept
 		{ return semihostingSyscall(Syscall::isTTY, &fd); }

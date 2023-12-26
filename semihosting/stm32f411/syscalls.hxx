@@ -50,7 +50,7 @@ namespace semihosting
 	[[nodiscard]] int32_t write(int32_t fd, const substrate::span<const uint8_t> &data) noexcept;
 	[[nodiscard]] int32_t read(int32_t fd, substrate::span<uint8_t> data) noexcept;
 	[[nodiscard]] int32_t readChar() noexcept;
-	[[nodiscard]] int32_t isError(int32_t status) noexcept;
+	[[nodiscard]] bool isError(int32_t status) noexcept;
 	[[nodiscard]] int32_t isTTY(int32_t fd) noexcept;
 	[[nodiscard]] int32_t seek(int32_t fd, uint32_t offset) noexcept;
 	[[nodiscard]] int32_t fileLength(int32_t fd) noexcept;
