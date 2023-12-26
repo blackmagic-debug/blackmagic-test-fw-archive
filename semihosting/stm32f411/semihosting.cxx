@@ -44,6 +44,11 @@ constexpr static int32_t stdinFD{1};
 constexpr static int32_t stdoutFD{2};
 constexpr static size_t featuresLength{5U};
 constexpr static std::array<char, 4> featuresMagic{{'S', 'H', 'F', 'B'}};
+constexpr static auto alphabet{"abcdefghijklmnopqrstuvwxyz\r\n"sv};
+
+// NB: This suite is incomplete in that it does *not* test SYS_READ and SYS_READC with stdin
+// This is because we cannot write a reproducable easy to use test. We assume that SYS_READC
+// works (this is the only syscall we're fully unable to reproducibly test.
 
 // Compute the length of a (hopefully) nul terminated string stored in `storage`, bounded on the storage size
 template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> &storage) noexcept
@@ -139,6 +144,7 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 		return false;
 	}
 	host.notice("SYS_READ success"sv);
+	// Validate that the read features "file" magic number is valid
 	if (magic != featuresMagic)
 	{
 		host.error("Invalid "sv, "':semihosting-features'"sv, " magic number"sv);
@@ -149,6 +155,7 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	host.notice("':semihosting-features'"sv, " file magic OK"sv);
 
 	host.info("Checking feature byte"sv);
+	// Read out the next byte, which should be the supported features byte
 	uint8_t supportedFeatures{};
 	if (semihosting::read(featuresFD, {&supportedFeatures, 1U}) != 0)
 	{
@@ -158,6 +165,7 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 		return false;
 	}
 	host.notice("SYS_READ success"sv);
+	// Validate the value of the byte matches what we know BMD supports
 	// BMD supports extended exit and stdout+stderr through `:tt`
 	if (supportedFeatures != 3U)
 	{
@@ -167,6 +175,7 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	host.notice("Supported features reported correctly"sv);
 
 	host.info("Trying SYS_CLOSE on "sv, "':semihosting-features'"sv);
+	// Now try to close the "file" handle to make sure nothing bad happens in the emulation
 	if (semihosting::close(featuresFD) != SemihostingResult::success)
 	{
 		host.error("SYS_CLOSE failed"sv);
@@ -179,8 +188,8 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 
 [[nodiscard]] static bool testConsoleWrite() noexcept
 {
-	constexpr static auto alphabet{"abcdefghijklmnopqrstuvwxyz\r\n"sv};
-	host.info("Testing SYS_WRITE to stdout"sv);
+	host.info("Trying to SYS_WRITE to stdout"sv);
+	// Try writing the test string to stdout using a {ptr, length}
 	if (semihosting::write(host.stdoutFD(), substrate::span{alphabet}) != 0)
 	{
 		host.error("SYS_WRITE failed"sv);
@@ -188,7 +197,8 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	}
 	host.notice("SYS_WRITE success"sv);
 
-	host.info("Testing SYS_WRITE0 to stdout"sv);
+	host.info("Trying to SYS_WRITE0 to stdout"sv);
+	// Try writing the test string to stdout as a nul-terminated string
 	if (semihosting::write(alphabet.data()) != SemihostingResult::success)
 	{
 		host.error("SYS_WRITE0 failed"sv);
@@ -196,7 +206,8 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	}
 	host.notice("SYS_WRITE0 success"sv);
 
-	host.info("Testing SYS_WRITEC"sv);
+	host.info("Trying to SYS_WRITEC to stdout"sv);
+	// Try writing the test string to stdout one character at a time
 	for (const auto chr : alphabet)
 	{
 		if (semihosting::writeChar(chr) != SemihostingResult::success)
