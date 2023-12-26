@@ -46,6 +46,9 @@ constexpr static size_t featuresLength{5U};
 constexpr static std::array<char, 4> featuresMagic{{'S', 'H', 'F', 'B'}};
 constexpr static auto alphabet{"abcdefghijklmnopqrstuvwxyz\r\n"sv};
 
+constexpr static auto testFileA{"semihosting-test.a"sv};
+constexpr static auto testFileB{"semihosting-test.b"sv};
+
 // NB: This suite is incomplete in that it does *not* test SYS_READ and SYS_READC with stdin
 // This is because we cannot write a reproducable easy to use test. We assume that SYS_READC
 // works (this is the only syscall we're fully unable to reproducibly test.
@@ -221,12 +224,106 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	return true;
 }
 
+[[nodiscard]] static bool testFileIO() noexcept
+{
+	host.info("Trying SYS_OPEN on "sv, testFileA);
+	// Try to open file A in write mode - use binary mode to ensure no translation of newlines
+	int32_t fd{semihosting::open(testFileA, OpenMode::writeBinary)};
+	if (fd <= 0)
+	{
+		host.error("SYS_OPEN failed: errno = "sv, semihosting::lastErrno());
+		return false;
+	}
+	host.notice("SYS_OPEN success"sv);
+
+	host.info("Trying to SYS_WRITE to file"sv);
+	// Now try to write the test data to the resulting file descriptor
+	if (semihosting::write(fd, substrate::span{alphabet}) != 0)
+	{
+		host.error("SYS_WRITE failed"sv);
+		return false;
+	}
+	host.notice("SYS_WRITE success"sv);
+
+	host.info("Trying to SYS_CLOSE file"sv);
+	// Try to close the test file and write some more data to it (this write should fail!)
+	if (semihosting::close(fd) != SemihostingResult::success ||
+		semihosting::write(fd, substrate::span{alphabet}) == 0)
+	{
+		host.error("SYS_CLOSE failed"sv);
+		return false;
+	}
+	host.notice("SYS_CLOSE success"sv);
+
+	host.info("Trying to SYS_RENAME the test file"sv);
+	if (semihosting::rename(testFileA, testFileB) != SemihostingResult::success)
+	{
+		host.error("SYS_RENAME failed"sv);
+		return false;
+	}
+	host.notice("SYS_RENAME success"sv);
+
+	host.info("Trying SYS_OPEN on "sv, testFileB);
+	// Try to open file B in read mode - use binary mode to ensure no translation of newlines
+	fd = semihosting::open(testFileB, OpenMode::readBinary);
+	if (fd <= 0)
+	{
+		host.error("SYS_OPEN failed: errno = "sv, semihosting::lastErrno());
+		return false;
+	}
+	host.notice("SYS_OPEN success"sv);
+
+	host.info("Trying SYS_FLEN on file"sv);
+	if (static_cast<size_t>(semihosting::fileLength(fd)) != alphabet.length())
+	{
+		host.error("SYS_FLEN failed"sv);
+		return false;
+	}
+	host.notice("SYS_FLEN success"sv);
+
+	std::array<char, alphabet.length()> buffer{};
+	host.info("Trying to SYS_READ from file"sv);
+	// Now try to write the test data to the resulting file descriptor
+	if (semihosting::read(fd, substrate::span{buffer}) != 0)
+	{
+		host.error("SYS_READ failed"sv);
+		return false;
+	}
+	host.notice("SYS_READ success"sv);
+	if (std::string_view{buffer.data(), buffer.size()} != alphabet)
+	{
+		host.error("Data read fails to match data written"sv);
+		return false;
+	}
+	host.notice("Data read back correctly"sv);
+
+	host.info("Trying to SYS_CLOSE file"sv);
+	// Try to close the test file and read some more data from it (this read should fail!)
+	if (semihosting::close(fd) != SemihostingResult::success ||
+		semihosting::read(fd, substrate::span{buffer}) == 0)
+	{
+		host.error("SYS_CLOSE failed"sv);
+		return false;
+	}
+	host.notice("SYS_CLOSE success"sv);
+
+	host.info("Trying to SYS_REMOVE the test file"sv);
+	if (semihosting::remove(testFileB) != SemihostingResult::success)
+	{
+		host.error("SYS_REMOVE failed"sv);
+		return false;
+	}
+	host.notice("SYS_REMOVE success"sv);
+	return true;
+}
+
 [[nodiscard]] static bool testSemihosting() noexcept
 {
 	return testReadCommandLine() &&
 		testConsoleHandles() &&
 		testSemihostingFeatures() &&
-		testConsoleWrite();
+		testConsoleWrite() &&
+		testFileIO();
 }
 
 int main(int, char **)
