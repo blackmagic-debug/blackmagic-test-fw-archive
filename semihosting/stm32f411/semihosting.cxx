@@ -32,12 +32,16 @@
 
 #include <array>
 #include <string_view>
+#include <substrate/span>
+#include <substrate/index_sequence>
+#include <frozen/unordered_map.h>
 #include "syscalls.hxx"
 #include "hostConsole.hxx"
 
 using namespace std::literals::string_view_literals;
 using semihosting::types::OpenMode;
 using semihosting::types::SemihostingResult;
+using semihosting::types::FileIOErrno;
 using semihosting::host::console::host;
 
 constexpr static int32_t stdinFD{1};
@@ -48,6 +52,34 @@ constexpr static auto alphabet{"abcdefghijklmnopqrstuvwxyz\r\n"sv};
 
 constexpr static auto testFileA{"semihosting-test.a"sv};
 constexpr static auto testFileB{"semihosting-test.b"sv};
+
+constexpr static auto fileIOErrno
+{
+	frozen::make_unordered_map<FileIOErrno, std::string_view>
+	({
+		{FileIOErrno::notPermitted, "FILEIO_EPERM (Operation not permitted)"sv},
+		{FileIOErrno::noSuchEntity, "FILEIO_ENOENT (No such file or directory)"sv},
+		{FileIOErrno::syscallInterrupted, "FILEIO_EINTR (Interrupted system call)"sv},
+		{FileIOErrno::ioError, "FILEIO_EIO (I/O error)"sv},
+		{FileIOErrno::badFD, "FILEIO_EBADF (Bad file number)"sv},
+		{FileIOErrno::accessError, "FILEIO_EACCESS (Permission denied)"sv},
+		{FileIOErrno::addressFault, "FILEIO_EFAULT (Bad address)"sv},
+		{FileIOErrno::busy, "FILEIO_EBUSY (Device or resource busy)"sv},
+		{FileIOErrno::alreadyExists, "FILEIO_EEXIST (File already exists)"sv},
+		{FileIOErrno::noSuchDevice, "FILEIO_ENODEV (No such device)"sv},
+		{FileIOErrno::notADir, "FILEIO_ENOTDIR (Not a directory)"sv},
+		{FileIOErrno::isADir, "FILEIO_EISDIR (Is a directory)"sv},
+		{FileIOErrno::argumentInvalid, "FILEIO_EINVAL (Invalid argument)"sv},
+		{FileIOErrno::fileTableFull, "FILEIO_ENFILE (File table overflow)"sv},
+		{FileIOErrno::tooManyOpenFiles, "FILEIO_EMFILE (Too many open files)"sv},
+		{FileIOErrno::fileTooLarge, "FILENO_EFBIG (File too large)"sv},
+		{FileIOErrno::outOfSpace, "FILENO_ENOSPC (No space left on device)"sv},
+		{FileIOErrno::illegalSeek, "FILENO_ESPIPE (Illegal seek)"sv},
+		{FileIOErrno::fsReadOnly, "FILENO_EROFS (Read-only file system"sv},
+		{FileIOErrno::syscallInvalid, "FILENO_ENOSYS (Invalid system call number)"sv},
+		{FileIOErrno::fileNameTooLong, "FILENO_ENAMETOOLONG (File name too long)"sv},
+	})
+};
 
 // NB: This suite is incomplete in that it does *not* test SYS_READ and SYS_READC with stdin
 // This is because we cannot write a reproducible easy to use test. We assume that SYS_READC
@@ -340,13 +372,40 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	return true;
 }
 
+[[nodiscard]] static bool testIsError() noexcept
+{
+	host.warn("-> "sv, __func__);
+	host.info("Testing SYS_ISERROR on the first 100 possible error codes"sv);
+	for (const auto code : substrate::indexSequence_t{100U})
+	{
+		// Look the code up in the map
+		const auto codeMapping{fileIOErrno.find(static_cast<FileIOErrno>(code))};
+		const auto inMap{codeMapping != fileIOErrno.end()};
+		// Make the semihosting request (our syscalls layer turns it into a bool for us)
+		const auto isError{semihosting::isError(static_cast<int32_t>(code))};
+		if (isError != inMap)
+		{
+			host.error("SYS_ISERROR failed - host considers "sv, code, " to"sv, isError ? ""sv : " not"sv,
+				" be an error when it should"sv, inMap ? ""sv : " not"sv);
+			return false;
+		}
+		if (inMap)
+			host.notice("SYS_ISERROR success for "sv, codeMapping->second);
+		else if (code == 0)
+			host.notice("SYS_ISERROR success for "sv, "FILEIO_SUCCESS (no error)"sv);
+	}
+	host.notice("SYS_ISERROR success"sv);
+	return true;
+}
+
 [[nodiscard]] static bool testSemihosting() noexcept
 {
 	return testReadCommandLine() &&
 		testConsoleHandles() &&
 		testSemihostingFeatures() &&
 		testConsoleWrite() &&
-		testFileIO();
+		testFileIO() &&
+		testIsError();
 }
 
 int main(int, char **)
