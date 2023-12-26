@@ -143,17 +143,18 @@ namespace semihosting
 		return semihostingSyscall(Syscall::tempName, params);
 	}
 
-	int32_t remove(const std::string_view &path) noexcept
+	types::SemihostingResult remove(const std::string_view &path) noexcept
 	{
 		const std::array<uintptr_t, 2> params
 		{{
 			reinterpret_cast<uintptr_t>(path.data()),
 			path.length(),
 		}};
-		return semihostingSyscall(Syscall::remove, params);
+		const auto result{semihostingSyscall(Syscall::remove, params)};
+		return static_cast<SemihostingResult>(result);
 	}
 
-	int32_t rename(const std::string_view &oldName, const std::string_view &newName) noexcept
+	types::SemihostingResult rename(const std::string_view &oldName, const std::string_view &newName) noexcept
 	{
 		const std::array<uintptr_t, 4> params
 		{{
@@ -162,7 +163,8 @@ namespace semihosting
 			reinterpret_cast<uintptr_t>(newName.data()),
 			newName.length(),
 		}};
-		return semihostingSyscall(Syscall::rename, params);
+		const auto result{semihostingSyscall(Syscall::rename, params)};
+		return static_cast<SemihostingResult>(result);
 	}
 
 	int32_t clock() noexcept
