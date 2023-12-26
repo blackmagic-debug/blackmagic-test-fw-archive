@@ -67,6 +67,7 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 // Test the retrieval of the command line from GDB
 [[nodiscard]] static bool testReadCommandLine() noexcept
 {
+	host.warn("-> "sv, __func__);
 	host.info("Testing SYS_GET_CMDLINE"sv);
 	std::array<char, 80> commandLineBuffer{};
 	if (semihosting::readCommandLine({commandLineBuffer}) != SemihostingResult::success)
@@ -86,6 +87,7 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 // Test to verify that we can close and open the host TTY handles properly
 [[nodiscard]] static bool testConsoleHandles() noexcept
 {
+	host.warn("-> "sv, __func__);
 	host.info("Testing SYS_CLOSE on special name ", "':tt'"sv);
 	if (!host.closeConsole())
 	{
@@ -115,6 +117,7 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 // and the contents make sense
 [[nodiscard]] static bool testSemihostingFeatures() noexcept
 {
+	host.warn("-> "sv, __func__);
 	host.info("Testing access to special name ':semihosting-features'"sv);
 	host.info("Trying SYS_OPEN on "sv, "':semihosting-features'"sv);
 	// Start by opening the special file
@@ -191,6 +194,7 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 
 [[nodiscard]] static bool testConsoleWrite() noexcept
 {
+	host.warn("-> "sv, __func__);
 	host.info("Trying to SYS_WRITE to stdout"sv);
 	// Try writing the test string to stdout using a {ptr, length}
 	if (semihosting::write(host.stdoutFD(), substrate::span{alphabet}) != 0)
@@ -226,6 +230,7 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 
 [[nodiscard]] static bool testFileIO() noexcept
 {
+	host.warn("-> "sv, __func__);
 	host.info("Trying SYS_OPEN on "sv, testFileA);
 	// Try to open file A in write mode - use binary mode to ensure no translation of newlines
 	int32_t fd{semihosting::open(testFileA, OpenMode::writeBinary)};
