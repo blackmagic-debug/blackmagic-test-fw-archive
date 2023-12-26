@@ -363,6 +363,7 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	host.notice("SYS_CLOSE success"sv);
 
 	host.info("Trying to SYS_REMOVE the test file"sv);
+	// Finally try and remove the file to clean up and to test the call works
 	if (semihosting::remove(testFileB) != SemihostingResult::success)
 	{
 		host.error("SYS_REMOVE failed"sv);
@@ -376,6 +377,7 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 {
 	host.warn("-> "sv, __func__);
 	host.info("Testing SYS_ISERROR on the first 100 possible error codes"sv);
+	// Loop through the first 100 possible error codes from SYS_ERRNO
 	for (const auto code : substrate::indexSequence_t{100U})
 	{
 		// Look the code up in the map
@@ -383,14 +385,17 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 		const auto inMap{codeMapping != fileIOErrno.end()};
 		// Make the semihosting request (our syscalls layer turns it into a bool for us)
 		const auto isError{semihosting::isError(static_cast<int32_t>(code))};
+		// Check that the error state matches what's expected
 		if (isError != inMap)
 		{
 			host.error("SYS_ISERROR failed - host considers "sv, code, " to"sv, isError ? ""sv : " not"sv,
 				" be an error when it should"sv, inMap ? ""sv : " not"sv);
 			return false;
 		}
+		// If it matches and it is an error (in the map), display the description in the success notice
 		if (inMap)
 			host.notice("SYS_ISERROR success for "sv, codeMapping->second);
+		// Otherwise display that it was the success "error" code, which is not considered an error
 		else if (code == 0)
 			host.notice("SYS_ISERROR success for "sv, "FILEIO_SUCCESS (no error)"sv);
 	}
