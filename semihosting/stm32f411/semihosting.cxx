@@ -295,12 +295,22 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 		return false;
 	}
 	host.notice("SYS_READ success"sv);
+	// Check that the data read back is the data we asked to have written
 	if (std::string_view{buffer.data(), buffer.size()} != alphabet)
 	{
 		host.error("Data read fails to match data written"sv);
 		return false;
 	}
 	host.notice("Data read back correctly"sv);
+
+	host.info("Trying SYS_ISTTY on file"sv);
+	// Check that the file is not a TTY, but is instead a real file on the filesystem
+	if (semihosting::isTTY(fd) != 0)
+	{
+		host.error("SYS_ISTTY failed"sv);
+		return false;
+	}
+	host.notice("SYS_ISTTY success"sv);
 
 	host.info("Trying to SYS_CLOSE file"sv);
 	// Try to close the test file and read some more data from it (this read should fail!)
