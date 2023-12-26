@@ -197,8 +197,8 @@ namespace semihosting
 		return static_cast<SemihostingResult>(result);
 	}
 
-	int32_t heapInfo(HeapInfoBlock &infoBlock) noexcept
-		{ return semihostingSyscall(Syscall::heapInfo, &infoBlock); }
+	void heapInfo(HeapInfoBlock &infoBlock) noexcept
+		{ semihostingSyscall(Syscall::heapInfo, &infoBlock); }
 
 	void exit(const uint32_t code) noexcept
 	{

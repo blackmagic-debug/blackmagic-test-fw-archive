@@ -63,7 +63,7 @@ namespace semihosting
 	[[nodiscard]] int32_t system(const std::string_view &command) noexcept;
 	[[nodiscard]] int32_t lastErrno() noexcept;
 	[[nodiscard]] types::SemihostingResult readCommandLine(substrate::span<char> commandLine) noexcept;
-	[[nodiscard]] int32_t heapInfo(types::HeapInfoBlock &infoBlock) noexcept;
+	void heapInfo(types::HeapInfoBlock &infoBlock) noexcept;
 	[[noreturn]] void exit(uint32_t code) noexcept;
 	[[noreturn]] void exit(uint64_t code) noexcept;
 	[[nodiscard]] int32_t elapsedTime(uint64_t &ticks) noexcept;
