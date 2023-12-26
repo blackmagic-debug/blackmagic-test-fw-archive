@@ -39,7 +39,7 @@
 #include <string_view>
 #include <substrate/span>
 
-#include "syscall_types.hxx"
+#include "syscallTypes.hxx"
 
 namespace semihosting
 {

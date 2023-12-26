@@ -32,7 +32,7 @@
 
 #include <array>
 #include "syscalls.hxx"
-#include "syscall_types.hxx"
+#include "syscallTypes.hxx"
 
 using namespace semihosting::types;
 
