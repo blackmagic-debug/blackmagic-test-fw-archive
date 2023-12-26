@@ -110,6 +110,14 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	// Check and make sure that the handles returned are actually for the right console parts
 	if (host.stdinFD() != stdinFD || host.stdoutFD() != stdoutFD)
 		host.error("Improper I/O handles returned for special name "sv, "':tt'"sv);
+	// Check that the handles we got back point to an actual console
+	host.info("Testing SYS_ISTTY on "sv, "':tt'"sv, " handles"sv);
+	if (semihosting::isTTY(host.stdinFD()) != 1 || semihosting::isTTY(host.stdoutFD()) != 1)
+	{
+		host.error("SYS_ISTTY failed"sv);
+		return false;
+	}
+	host.notice("SYS_ISTTY success");
 	return host.stdinFD() == stdinFD && host.stdoutFD() == stdoutFD;
 }
 
