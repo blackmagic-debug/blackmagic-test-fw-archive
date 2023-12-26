@@ -50,8 +50,8 @@ constexpr static auto testFileA{"semihosting-test.a"sv};
 constexpr static auto testFileB{"semihosting-test.b"sv};
 
 // NB: This suite is incomplete in that it does *not* test SYS_READ and SYS_READC with stdin
-// This is because we cannot write a reproducable easy to use test. We assume that SYS_READC
-// works (this is the only syscall we're fully unable to reproducibly test.
+// This is because we cannot write a reproducible easy to use test. We assume that SYS_READC
+// works (this is the only syscall we're fully unable to reproducibly test).
 
 // Compute the length of a (hopefully) nul terminated string stored in `storage`, bounded on the storage size
 template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> &storage) noexcept
