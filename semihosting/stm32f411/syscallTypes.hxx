@@ -94,6 +94,52 @@ namespace semihosting::types
 		success = 0,
 		failure = -1,
 	};
+
+	enum class FileIOErrno : int32_t
+	{
+		/* EPERM - Operation not permitted */
+		notPermitted = 1,
+		/* ENOENT - No such file or directory */
+		noSuchEntity = 2,
+		/* EINTR - Interrupted system call */
+		syscallInterrupted = 4,
+		/* EIO - I/O error */
+		ioError = 5,
+		/* EBADF - Bad file number */
+		badFD = 9,
+		/* EACCESS - Permission denied */
+		accessError = 13,
+		/* EFAULT - Bad address */
+		addressFault = 14,
+		/* EBUSY - Device or resource busy */
+		busy = 16,
+		/* EEXIST - File exists */
+		alreadyExists = 17,
+		/* ENODEV - No such device */
+		noSuchDevice = 19,
+		/* ENOTDIR - Not a directory */
+		notADir = 20,
+		/* EISDIR - Is a directory */
+		isADir = 21,
+		/* EINVAL - Invalid argument */
+		argumentInvalid = 22,
+		/* ENFILE - File table overflow */
+		fileTableFull = 23,
+		/* EMFILE - Too many open files */
+		tooManyOpenFiles = 24,
+		/* EFBIG - File too large */
+		fileTooLarge = 27,
+		/* ENOSPC - No space left on device */
+		outOfSpace = 28,
+		/* ESPIPE - Illegal seek */
+		illegalSeek = 29,
+		/* EROFS - Read-only file system */
+		fsReadOnly = 30,
+		/* ENOSYS - Invalid system call number */
+		syscallInvalid = 88,
+		/* ENAMETOOLONG - File name too long */
+		fileNameTooLong = 91,
+	};
 } // namespace semihosting::types
 
 #endif /*SYSCALL_TYPES_HXX*/
