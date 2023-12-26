@@ -40,6 +40,7 @@
 
 using namespace std::literals::string_view_literals;
 using semihosting::types::OpenMode;
+using semihosting::types::HeapInfoBlock;
 using semihosting::types::SemihostingResult;
 using semihosting::types::FileIOErrno;
 using semihosting::host::console::host;
@@ -403,6 +404,32 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	return true;
 }
 
+[[nodiscard]] static bool testHeapInfo() noexcept
+{
+	host.warn("-> "sv, __func__);
+	// Initialise the HeapInfoBlock to something insane and obvious so we can clearly tell if the call worked
+	HeapInfoBlock infoBlock
+	{
+		0xbada110cU,
+		0xca7f00d5U,
+		0xfeedaca7U,
+		0xbeefcafeU,
+	};
+	// Make the syscall to get the actual block from the host
+	host.info("Testing SYS_HEAPINFO"sv);
+	semihosting::heapInfo(infoBlock);
+	if (infoBlock.heapBase == 0xbada110cU || infoBlock.heapLimit == 0xca7f00d5U ||
+		infoBlock.stackBase == 0xfeedaca7U || infoBlock.stackLimit == 0xbeefcafeU)
+	{
+		host.error("SYS_HEAPINFO failed"sv);
+		return false;
+	}
+	host.notice("SYS_HEAPINFO success"sv);
+	host.notice("Heap base: "sv, infoBlock.heapBase, ", limit: "sv, infoBlock.heapLimit);
+	host.notice("Stack base: "sv, infoBlock.stackBase, ", limit: "sv, infoBlock.stackLimit);
+	return true;
+}
+
 [[nodiscard]] static bool testSemihosting() noexcept
 {
 	return testReadCommandLine() &&
@@ -410,7 +437,8 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 		testSemihostingFeatures() &&
 		testConsoleWrite() &&
 		testFileIO() &&
-		testIsError();
+		testIsError() &&
+		testHeapInfo();
 }
 
 int main(int, char **)
