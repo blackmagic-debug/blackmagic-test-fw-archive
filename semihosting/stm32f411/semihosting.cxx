@@ -430,6 +430,37 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	return true;
 }
 
+[[nodiscard]] static bool testErrno() noexcept
+{
+	host.warn("-> "sv, __func__);
+	host.info("Setting up and testing SYS_ERRNO"sv);
+	// Try to open file B in read mode - use binary mode to ensure no translation of newlines
+	// NB: we want and expect this to fail as the file should not exist after the previous File I/O test step
+	const auto fd{semihosting::open(testFileB, OpenMode::readBinary)};
+	if (fd > 0)
+	{
+		host.error("Setup failed, file "sv, testFileB, " unexpectedly exists"sv);
+		if (semihosting::close(fd) != SemihostingResult::success)
+			host.error("Additionally SYS_CLOSE failed"sv);
+		return false;
+	}
+	// Now try to read back the error associated with that open()
+	if (const auto lastError{semihosting::lastErrno()}; lastError != FileIOErrno::noSuchEntity)
+	{
+		host.error("SYS_ERRNO failed giving "sv, lastError, " - expected "sv, FileIOErrno::noSuchEntity);
+		return false;
+	}
+	host.notice("First SYS_ERRNO successful, trying a second"sv);
+	// If all's gone well, errno should now be 0 (success) here, so let's try to get it back
+	if (const auto lastError{semihosting::lastErrno()}; lastError != FileIOErrno::success)
+	{
+		host.error("SYS_ERRNO failed giving "sv, lastError, " - expected "sv, FileIOErrno::success);
+		return false;
+	}
+	host.notice("SYS_ERRNO success"sv);
+	return true;
+}
+
 [[nodiscard]] static bool testSemihosting() noexcept
 {
 	return testReadCommandLine() &&
@@ -438,7 +469,8 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 		testConsoleWrite() &&
 		testFileIO() &&
 		testIsError() &&
-		testHeapInfo();
+		testHeapInfo() &&
+		testErrno();
 }
 
 int main(int, char **)
