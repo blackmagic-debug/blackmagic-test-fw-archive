@@ -474,9 +474,15 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	host.notice("SYS_TICKFREQ "sv, "failed (expected)"sv);
 	host.info("Testing SYS_ELAPSED"sv);
 	uint64_t ticksElapsed{};
+	// If ticksElapsed is non-0 after this call, something bad happened
 	if (semihosting::elapsedTime(ticksElapsed) != SemihostingResult::failure)
 	{
 		host.error("SYS_ELAPSED "sv, "unexpectedly succeeded"sv);
+		return false;
+	}
+	if (ticksElapsed != UINT64_C(0))
+	{
+		host.error("SYS_ELAPSED "sv, "failed but wrong modified the result value"sv);
 		return false;
 	}
 	host.notice("SYS_ELAPSED "sv, "failed (expected)"sv);
