@@ -30,6 +30,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/types.h>
 #include <array>
 #include "syscalls.hxx"
 #include "syscallTypes.hxx"
@@ -232,3 +233,15 @@ namespace semihosting
 	int32_t tickFrequency() noexcept
 		{ return semihostingSyscall(Syscall::tickFrequency, nullptr); }
 } // namespace semihosting
+
+// These stubs turn off the newlib components we don't care about like `kill()` and `getpid()`
+extern "C"
+{
+	/* NOLINTNEXTLINE(bugprone-reserved-identifier,cert-dcl37-c,cert-dcl51-cpp) */
+	pid_t _getpid()
+		{ return 1; }
+
+	/* NOLINTNEXTLINE(bugprone-reserved-identifier,cert-dcl37-c,cert-dcl51-cpp) */
+	int _kill([[maybe_unused]] const int pid, [[maybe_unused]] const int signal)
+		{ return 0; }
+}
