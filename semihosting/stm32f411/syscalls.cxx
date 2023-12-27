@@ -171,8 +171,11 @@ namespace semihosting
 	int32_t clock() noexcept
 		{ return semihostingSyscall(Syscall::clock, nullptr); }
 
-	int32_t time() noexcept
-		{ return semihostingSyscall(Syscall::time, nullptr); }
+	uint32_t time() noexcept
+	{
+		const auto result{semihostingSyscall(Syscall::time, nullptr)};
+		return static_cast<uint32_t>(result);
+	}
 
 	int32_t system(const std::string_view &command) noexcept
 	{

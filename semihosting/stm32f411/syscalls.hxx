@@ -59,7 +59,7 @@ namespace semihosting
 	[[nodiscard]] types::SemihostingResult rename(const std::string_view &oldName,
 		const std::string_view &newName) noexcept;
 	[[nodiscard]] int32_t clock() noexcept;
-	[[nodiscard]] int32_t time() noexcept;
+	[[nodiscard]] uint32_t time() noexcept;
 	[[nodiscard]] int32_t system(const std::string_view &command) noexcept;
 	[[nodiscard]] types::FileIOErrno lastErrno() noexcept;
 	[[nodiscard]] types::SemihostingResult readCommandLine(substrate::span<char> commandLine) noexcept;
