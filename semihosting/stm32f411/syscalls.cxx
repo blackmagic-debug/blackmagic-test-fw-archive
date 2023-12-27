@@ -183,8 +183,8 @@ namespace semihosting
 		return semihostingSyscall(Syscall::system, params);
 	}
 
-	int32_t lastErrno() noexcept
-		{ return semihostingSyscall(Syscall::lastErrno, nullptr); }
+	FileIOErrno lastErrno() noexcept
+		{ return static_cast<FileIOErrno>(semihostingSyscall(Syscall::lastErrno, nullptr)); }
 
 	SemihostingResult readCommandLine(substrate::span<char> commandLine) noexcept
 	{

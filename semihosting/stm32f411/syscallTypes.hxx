@@ -97,6 +97,8 @@ namespace semihosting::types
 
 	enum class FileIOErrno : int32_t
 	{
+		/* This is not an error and indicates a successful syscall */
+		success = 0,
 		/* EPERM - Operation not permitted */
 		notPermitted = 1,
 		/* ENOENT - No such file or directory */
