@@ -219,8 +219,11 @@ namespace semihosting
 			continue;
 	}
 
-	int32_t elapsedTime(uint64_t &ticks) noexcept
-		{ return semihostingSyscall(Syscall::elapsed, &ticks); }
+	SemihostingResult elapsedTime(uint64_t &ticks) noexcept
+	{
+		const auto result{semihostingSyscall(Syscall::elapsed, &ticks)};
+		return static_cast<SemihostingResult>(result);
+	}
 
 	int32_t tickFrequency() noexcept
 		{ return semihostingSyscall(Syscall::tickFrequency, nullptr); }

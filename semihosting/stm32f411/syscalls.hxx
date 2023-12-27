@@ -66,7 +66,7 @@ namespace semihosting
 	void heapInfo(types::HeapInfoBlock &infoBlock) noexcept;
 	[[noreturn]] void exit(uint32_t code) noexcept;
 	[[noreturn]] void exit(uint64_t code) noexcept;
-	[[nodiscard]] int32_t elapsedTime(uint64_t &ticks) noexcept;
+	[[nodiscard]] types::SemihostingResult elapsedTime(uint64_t &ticks) noexcept;
 	[[nodiscard]] int32_t tickFrequency() noexcept;
 
 	[[nodiscard]] static inline int32_t read(const int32_t fd, void *const dataPointer,
