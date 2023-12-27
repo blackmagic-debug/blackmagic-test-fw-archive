@@ -132,7 +132,7 @@ namespace semihosting
 	int32_t fileLength(const int32_t fd) noexcept
 		{ return semihostingSyscall(Syscall::fileLength, &fd); }
 
-	int32_t tempName(substrate::span<char> &fileName, int32_t targetID) noexcept
+	SemihostingResult tempName(substrate::span<char> &fileName, int32_t targetID) noexcept
 	{
 		const std::array<uintptr_t, 3> params
 		{{
@@ -140,7 +140,8 @@ namespace semihosting
 			static_cast<uintptr_t>(targetID),
 			fileName.size_bytes()
 		}};
-		return semihostingSyscall(Syscall::tempName, params);
+		const auto result{semihostingSyscall(Syscall::tempName, params)};
+		return static_cast<SemihostingResult>(result);
 	}
 
 	types::SemihostingResult remove(const std::string_view &path) noexcept
