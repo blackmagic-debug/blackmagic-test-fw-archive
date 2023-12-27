@@ -31,7 +31,7 @@
 LIBNAME    = opencm3_stm32f4
 FP_FLAGS   ?= -mfloat-abi=hard -mfpu=fpv4-sp-d16
 ARCH_FLAGS = -mthumb -mcpu=cortex-m4 $(FP_FLAGS)
-CPPFLAGS   += -I../../libs/substrate -I../../libs/frozen/include
+CPPFLAGS   += -I../../libs/substrate -I../../libs/frozen/include -DSTM32F4
 CFLAGS     += -std=c11 -O3
 CXXFLAGS   += -std=c++17 -Wall -Wpedantic -O3
 LDFLAGS    += -Wl,--print-memory-usage -specs=nano.specs -specs=nosys.specs

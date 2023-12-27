@@ -35,6 +35,8 @@
 #include <substrate/span>
 #include <substrate/index_sequence>
 #include <frozen/unordered_map.h>
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/timer.h>
 #include "syscalls.hxx"
 #include "hostConsole.hxx"
 
@@ -531,6 +533,26 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 
 int main(int, char **)
 {
+	// Set up clocking for later when we want to run the timekeeping tests
+	rcc_clock_setup_pll(&rcc_hsi_configs[RCC_CLOCK_3V3_84MHZ]);
+	rcc_periph_clock_enable(RCC_TIM1);
+	// Configure Timer 1 as an upcounting timer with a 2kHz tick frequency so we can count microseconds
+	timer_set_mode(TIM1, TIM_CR1_CKD_CK_INT, TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
+	// To get a 2kHz tick rate, we have to prescale the APB2 clock (84MHz) down on a ratio of 42000
+	// (84MHz / 2kHz), which is encoded in the prescaler register less 1 to get the right ratio
+	// We would use 1kHz here but the prescaler is only 16-bit so we don't have enough bits for that
+	timer_set_prescaler(TIM1, 41999U);
+	// Set that we want to count 1s at a time (1000ms in halves of a ms, which again, must be stored less 1)
+	timer_set_period(TIM1, 1999U);
+	// Disable the counter, resetting it to 0 ready for use
+	timer_disable_counter(TIM1);
+	timer_generate_event(TIM1, TIM_EGR_UG);
+	timer_clear_flag(TIM1, TIM_SR_UIF);
+	// Run the counter continuously once enabled
+	timer_continuous_mode(TIM1);
+	// Set that we only care about updates on counter overflow
+	timer_update_on_overflow(TIM1);
+
 	// Try to open the host's console interface, and if that fails, return as there's nothing more can be done
 	if (!host.openConsole())
 		return 1;
