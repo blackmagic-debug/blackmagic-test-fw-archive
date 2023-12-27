@@ -54,7 +54,7 @@ namespace semihosting
 	[[nodiscard]] int32_t isTTY(int32_t fd) noexcept;
 	[[nodiscard]] int32_t seek(int32_t fd, uint32_t offset) noexcept;
 	[[nodiscard]] int32_t fileLength(int32_t fd) noexcept;
-	[[nodiscard]] types::SemihostingResult tempName(substrate::span<char> &fileName, int32_t targetID) noexcept;
+	[[nodiscard]] types::SemihostingResult tempName(substrate::span<char> fileName, int32_t targetID) noexcept;
 	[[nodiscard]] types::SemihostingResult remove(const std::string_view &path) noexcept;
 	[[nodiscard]] types::SemihostingResult rename(const std::string_view &oldName,
 		const std::string_view &newName) noexcept;

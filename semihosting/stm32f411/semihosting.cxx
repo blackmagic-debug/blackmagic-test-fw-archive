@@ -53,6 +53,7 @@ constexpr static auto alphabet{"abcdefghijklmnopqrstuvwxyz\r\n"sv};
 
 constexpr static auto testFileA{"semihosting-test.a"sv};
 constexpr static auto testFileB{"semihosting-test.b"sv};
+constexpr static auto testTempFileName{"tempAK.tmp"sv};
 
 constexpr static auto fileIOErrno
 {
@@ -108,7 +109,7 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 		host.error("SYS_GET_CMDLINE failed"sv);
 		return false;
 	}
-	std::string_view commandLine{commandLineBuffer.data(), strlen(commandLineBuffer)};
+	const std::string_view commandLine{commandLineBuffer.data(), strlen(commandLineBuffer)};
 	const auto result{commandLine == " how meow brown cow"sv};
 	if (result)
 		host.notice("SYS_GET_CMDLINE success"sv);
@@ -489,6 +490,31 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	return true;
 }
 
+[[nodiscard]] static bool testTempName() noexcept
+{
+	host.warn("-> "sv, __func__);
+	host.info("Testing SYS_TMPNAM"sv);
+	// Set up a buffer of at least 20 bytes (value of L_tmpnam) to receive the new file name
+	std::array<char, 32> fileNameBuffer{};
+	// Try to get a new temporary file name
+	if (semihosting::tempName({fileNameBuffer}, 10) != SemihostingResult::success)
+	{
+		host.error("SYS_TMPNAM failed"sv);
+		return false;
+	}
+	// Convert the buffer array into a real string (view) and check what it contains
+	const std::string_view fileName{fileNameBuffer.data(), strlen(fileNameBuffer)};
+	// BMD uses the for `tempXX.tmp` where XX is the target ID value split nibble-wise and
+	// linearly mapped onto the first 16 characters of the alphabet in upper-case
+	if (fileName != testTempFileName)
+	{
+		host.error("SYS_TMPNAM failed, generated "sv, fileName, ", expected "sv, testTempFileName);
+		return false;
+	}
+	host.notice("SYS_TMPNAM success"sv);
+	return true;
+}
+
 [[nodiscard]] static bool testSemihosting() noexcept
 {
 	return testReadCommandLine() &&
@@ -499,7 +525,8 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 		testIsError() &&
 		testHeapInfo() &&
 		testErrno() &&
-		testTiming();
+		testTiming() &&
+		testTempName();
 }
 
 int main(int, char **)
