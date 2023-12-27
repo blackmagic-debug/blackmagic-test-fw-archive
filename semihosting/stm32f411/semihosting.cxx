@@ -461,6 +461,28 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	return true;
 }
 
+[[nodiscard]] static bool testTiming() noexcept
+{
+	host.warn("-> "sv, __func__);
+	// BMD does not implement either of these calls, so we expect both to fail
+	host.info("Testing SYS_TICKFREQ"sv);
+	if (semihosting::tickFrequency() != -1)
+	{
+		host.error("SYS_TICKFREQ "sv, "unexpectedly succeeded"sv);
+		return false;
+	}
+	host.notice("SYS_TICKFREQ "sv, "failed (expected)"sv);
+	host.info("Testing SYS_ELAPSED"sv);
+	uint64_t ticksElapsed{};
+	if (semihosting::elapsedTime(ticksElapsed) != SemihostingResult::failure)
+	{
+		host.error("SYS_ELAPSED "sv, "unexpectedly succeeded"sv);
+		return false;
+	}
+	host.notice("SYS_ELAPSED "sv, "failed (expected)"sv);
+	return true;
+}
+
 [[nodiscard]] static bool testSemihosting() noexcept
 {
 	return testReadCommandLine() &&
@@ -470,7 +492,8 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 		testFileIO() &&
 		testIsError() &&
 		testHeapInfo() &&
-		testErrno();
+		testErrno() &&
+		testTiming();
 }
 
 int main(int, char **)
