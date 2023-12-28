@@ -517,9 +517,77 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	return true;
 }
 
+[[nodiscard]] static bool testTimekeeping() noexcept
+{
+	host.warn("-> "sv, __func__);
+	// Check that we can retrieve the current time in seconds and that it goes up at aproximately the right rate
+	host.info("Testing SYS_TIME"sv);
+	// Start the counter counting
+	timer_enable_counter(TIM1);
+	timer_clear_flag(TIM1, TIM_SR_UIF);
+	// Try to get a start time - if the system call takes too long, increase the time step and
+	// try again for up to 8s of time step
+	const auto startTime
+	{
+		[]()
+		{
+			auto period{timer_get_period(TIM1)};
+			while (period < 17999U)
+			{
+				// Try and retrieve the time
+				const auto time{semihosting::time()};
+				host.info("Got start time of "sv, time);
+				// If the timer did *not* expire, move onto the next step
+				if (!timer_get_flag(TIM1, TIM_SR_UIF))
+					return time;
+				// Otherwise, make note and increase the period by a second
+				host.info("Timer already expired, trying again"sv);
+				period += 2000U;
+				timer_set_period(TIM1, period);
+				// Reset the timer
+				timer_generate_event(TIM1, TIM_EGR_UG);
+				timer_clear_flag(TIM1, TIM_SR_UIF);
+			}
+			// If all that fails, return UINT32_MAX so we have an easily recognised value on the outside
+			return UINT32_MAX;
+		}()
+	};
+	// Check that getting the start time succeeded
+	if (startTime == UINT32_MAX)
+	{
+		host.error("Failed to configure the internal timer for this test"sv);
+		return false;
+	}
+
+	for (const auto iteration : substrate::indexSequence_t{5U})
+	{
+		// Wait for the counter to expire and request the time again
+		while (!timer_get_flag(TIM1, TIM_SR_UIF))
+			continue;
+		timer_clear_flag(TIM1, TIM_SR_UIF);
+		const auto currentTime{semihosting::time()};
+		const auto expectedTimestep{((timer_get_period(TIM1) + 1U) >> 1U) * (iteration + 1U)};
+		const auto actualTimestep{(currentTime - startTime) * 1000U};
+		// Check that the resulting time gap tallies with the timer
+		if (expectedTimestep != actualTimestep)
+		{
+			timer_disable_counter(TIM1);
+			host.error("Timestep of "sv, actualTimestep, " too "sv,
+				actualTimestep < expectedTimestep ? "short"sv : "long"sv, ", expected "sv, expectedTimestep);
+			return false;
+		}
+		host.info("Time step of "sv, expectedTimestep, " to "sv, currentTime, " ok"sv);
+	}
+	// Finish up by disabling the counter again
+	timer_disable_counter(TIM1);
+	host.notice("SYS_TIME success"sv);
+	return true;
+}
+
 [[nodiscard]] static bool testSemihosting() noexcept
 {
-	return testReadCommandLine() &&
+	return
+		testReadCommandLine() &&
 		testConsoleHandles() &&
 		testSemihostingFeatures() &&
 		testConsoleWrite() &&
@@ -528,7 +596,8 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 		testHeapInfo() &&
 		testErrno() &&
 		testTiming() &&
-		testTempName();
+		testTempName() &&
+		testTimekeeping();
 }
 
 int main(int, char **)
