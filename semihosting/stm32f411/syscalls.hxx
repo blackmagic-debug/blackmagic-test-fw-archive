@@ -64,8 +64,9 @@ namespace semihosting
 	[[nodiscard]] types::FileIOErrno lastErrno() noexcept;
 	[[nodiscard]] types::SemihostingResult readCommandLine(substrate::span<char> commandLine) noexcept;
 	void heapInfo(types::HeapInfoBlock &infoBlock) noexcept;
-	[[noreturn]] void exit(uint32_t code) noexcept;
-	[[noreturn]] void exit(uint64_t code) noexcept;
+	// These would ordinarily be [[noreturn]], but in this testing implementation they do return so we can test both
+	void exit(types::ExitReason reason) noexcept;
+	void exit(types::ExitReason reason, uint32_t statusCode) noexcept;
 	[[nodiscard]] types::SemihostingResult elapsedTime(uint64_t &ticks) noexcept;
 	[[nodiscard]] int32_t tickFrequency() noexcept;
 

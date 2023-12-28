@@ -59,8 +59,8 @@ namespace semihosting::types
 		lastErrno = 0x13U,
 		readCommandLine = 0x15U,
 		heapInfo = 0x16U,
-		exit32 = 0x18U,
-		exit64 = 0x20U,
+		exit = 0x18U,
+		exitExtended = 0x20U,
 		elapsed = 0x30U,
 		tickFrequency = 0x31U,
 	};
@@ -141,6 +141,31 @@ namespace semihosting::types
 		syscallInvalid = 88,
 		/* ENAMETOOLONG - File name too long */
 		fileNameTooLong = 91,
+	};
+
+	enum class ExitReason : uint32_t
+	{
+		// Hardware exceptions
+		branchThroughZero = 0x20000U,
+		undefinedInsn = 0x20001U,
+		softwareInterrupt = 0x20002U,
+		prefetchAbort = 0x20003U,
+		dataAbort = 0x20004U,
+		addressException = 0x20005U,
+		irq = 0x20006U,
+		fiq = 0x20007U,
+
+		// Software reasons
+		breakpoint = 0x20020U,
+		watchpoint = 0x20021U,
+		stepComplete = 0x20022U,
+		runtimeErrorUnknown = 0x20023U,
+		internalError = 0x20024U,
+		userInterruption = 0x20025U,
+		applicationExit = 0x20026U,
+		stackOverflow = 0x20027U,
+		divideByZero = 0x20028U,
+		osSpecific = 0x20029U,
 	};
 } // namespace semihosting::types
 

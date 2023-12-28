@@ -205,23 +205,20 @@ namespace semihosting
 	void heapInfo(HeapInfoBlock &infoBlock) noexcept
 		{ semihostingSyscall(Syscall::heapInfo, &infoBlock); }
 
-	void exit(const uint32_t code) noexcept
+	void exit(const ExitReason reason) noexcept
 	{
-		semihostingSyscall(Syscall::exit32, reinterpret_cast<void *>(code));
-		while (true)
-			continue;
+		const auto reasonCode{static_cast<uintptr_t>(reason)};
+		semihostingSyscall(Syscall::exit, reinterpret_cast<void *>(reasonCode));
 	}
 
-	void exit(const uint64_t code) noexcept
+	void exit(const ExitReason reason, const uint32_t statusCode) noexcept
 	{
 		const std::array<uint32_t, 2> params
 		{{
-			static_cast<uint32_t>(code),
-			static_cast<uint32_t>(code >> 32U),
+			static_cast<uint32_t>(reason),
+			statusCode,
 		}};
-		semihostingSyscall(Syscall::exit64, params);
-		while (true)
-			continue;
+		semihostingSyscall(Syscall::exitExtended, params);
 	}
 
 	SemihostingResult elapsedTime(uint64_t &ticks) noexcept
