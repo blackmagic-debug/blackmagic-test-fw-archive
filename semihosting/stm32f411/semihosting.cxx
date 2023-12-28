@@ -45,6 +45,7 @@ using semihosting::types::OpenMode;
 using semihosting::types::HeapInfoBlock;
 using semihosting::types::SemihostingResult;
 using semihosting::types::FileIOErrno;
+using semihosting::types::ExitReason;
 using semihosting::host::console::host;
 
 constexpr static int32_t stdinFD{1};
@@ -637,6 +638,21 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	return true;
 }
 
+[[nodiscard]] static bool testExits() noexcept
+{
+	host.warn("-> "sv, __func__);
+	// Check that calling the two kinds of exit works [for some value of working]
+	// Best we can do here is to call them each and then visually check on the
+	// other end of the debug connection that the right output is generated from
+	// in BMD - the first should result in `exit(0)` being printed, the second
+	// in `exit(25)` as extended exit allows us to drive the status code.
+	host.info("Testing SYS_EXIT"sv);
+	semihosting::exit(ExitReason::applicationExit);
+	host.info("Testing SYS_EXIT_EXTENDED"sv);
+	semihosting::exit(ExitReason::applicationExit, 25U);
+	return true;
+}
+
 [[nodiscard]] static bool testSemihosting() noexcept
 {
 	return
@@ -651,7 +667,8 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 		testTiming() &&
 		testTempName() &&
 		testTimekeeping() &&
-		testIntervals();
+		testIntervals() &&
+		testExits();
 }
 
 int main(int, char **)
