@@ -536,7 +536,7 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 			{
 				// Try and retrieve the time
 				const auto time{semihosting::time()};
-				host.info("Got start time of "sv, time);
+				host.info("Starting time: "sv, time);
 				// If the timer did *not* expire, move onto the next step
 				if (!timer_get_flag(TIM1, TIM_SR_UIF))
 					return time;
@@ -558,7 +558,9 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 		host.error("Failed to configure the internal timer for this test"sv);
 		return false;
 	}
-
+	const auto period{(timer_get_period(TIM1) + 1U) >> 1U};
+	// Run 5 requests for the time in succession, checking that they land the right distance apart
+	// and are differing values, indicating that the host is counting up properly in seconds
 	for (const auto iteration : substrate::indexSequence_t{5U})
 	{
 		// Wait for the counter to expire and request the time again
@@ -566,8 +568,9 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 			continue;
 		timer_clear_flag(TIM1, TIM_SR_UIF);
 		const auto currentTime{semihosting::time()};
-		const auto expectedTimestep{((timer_get_period(TIM1) + 1U) >> 1U) * (iteration + 1U)};
+		const auto expectedTimestep{period * (iteration + 1U)};
 		const auto actualTimestep{(currentTime - startTime) * 1000U};
+		host.info("Timestep "sv, iteration + 1U, ": "sv, currentTime);
 		// Check that the resulting time gap tallies with the timer
 		if (expectedTimestep != actualTimestep)
 		{
@@ -576,7 +579,6 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 				actualTimestep < expectedTimestep ? "short"sv : "long"sv, ", expected "sv, expectedTimestep);
 			return false;
 		}
-		host.info("Time step of "sv, expectedTimestep, " to "sv, currentTime, " ok"sv);
 	}
 	// Finish up by disabling the counter again
 	timer_disable_counter(TIM1);
