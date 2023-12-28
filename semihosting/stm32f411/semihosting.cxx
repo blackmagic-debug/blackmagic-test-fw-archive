@@ -586,6 +586,57 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 	return true;
 }
 
+[[nodiscard]] static bool testIntervals() noexcept
+{
+	host.warn("-> "sv, __func__);
+	// Check that we can retrieve the time elapsed since the start of execution in centiseconds
+	// and that it progresses properly against our timer
+	host.info("Testing SYS_CLOCK"sv);
+	// Start the counter counting, resetting it back to zero before we go on
+	timer_enable_counter(TIM1);
+	timer_generate_event(TIM1, TIM_EGR_UG);
+	timer_clear_flag(TIM1, TIM_SR_UIF);
+	// We've already calibrated it to handle syscall latency, so get on and get the first time point
+	auto wallTime{semihosting::clock()};
+	// Check that getting the start time succeeded
+	if (wallTime == -1)
+	{
+		timer_disable_counter(TIM1);
+		host.error("SYS_CLOCK failed"sv);
+		return false;
+	}
+	host.info("Starting time: "sv, wallTime);
+	auto period{(timer_get_period(TIM1) + 1U) >> 1U};
+	// Run 5 requests for the wall clock in succession, checking that they land the right distance
+	// apart and are differing values, indicating that the host is counting up properly in centiseconds
+	for (const auto iteration : substrate::indexSequence_t{5U})
+	{
+		// Wait for the counter to expire and request the wall clock again
+		while (!timer_get_flag(TIM1, TIM_SR_UIF))
+			continue;
+		timer_clear_flag(TIM1, TIM_SR_UIF);
+		const auto currentTime{semihosting::clock()};
+		const auto timestep{(currentTime - wallTime) * 10U};
+		host.info("Timestep "sv, iteration + 1U, ": "sv, currentTime);
+		// Check that the resulting time gap tallies with the timer (±40ms)
+		if (timestep < period - 40U || timestep > period + 40U)
+		{
+			timer_disable_counter(TIM1);
+			host.error("Timestep of "sv, timestep, " too "sv,
+				timestep < period ? "short"sv : "long"sv, ", expected "sv, period);
+			return false;
+		}
+		wallTime = currentTime;
+		// Increase the timestep interval by 150ms
+		period += 150U;
+		timer_set_period(TIM1, (period << 1U) - 1U);
+	}
+	// Finish up by disabling the counter again
+	timer_disable_counter(TIM1);
+	host.notice("SYS_CLOCK success"sv);
+	return true;
+}
+
 [[nodiscard]] static bool testSemihosting() noexcept
 {
 	return
@@ -599,7 +650,8 @@ template<size_t N> [[nodiscard]] static size_t strlen(const std::array<char, N> 
 		testErrno() &&
 		testTiming() &&
 		testTempName() &&
-		testTimekeeping();
+		testTimekeeping() &&
+		testIntervals();
 }
 
 int main(int, char **)
