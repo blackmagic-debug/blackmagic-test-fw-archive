@@ -112,7 +112,7 @@ int main(void)
 			itm_write(0U, value);
 		itm_write(0U, '\r');
 		itm_write(0U, '\n');
-		gpio_toggle(GPIOA, GPIO12);
+		gpio_toggle(GPIOA, GPIO5);
 	}
 
 	return 0;
