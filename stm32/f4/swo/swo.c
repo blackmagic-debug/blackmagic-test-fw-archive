@@ -41,7 +41,7 @@
 #include <libopencm3/cm3/itm.h>
 
 #define SWO_BAUDRATE 115200U
-#define ARM_LAR_ACCESS_ENABLE 0xc5acce55U;
+#define ARM_LAR_ACCESS_ENABLE 0xc5acce55U
 
 static void clock_setup(void)
 {
