@@ -28,11 +28,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stddef.h>
+
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/usart.h>
 
 #define UART_BAUDRATE 115200U
+
+#define ARRAY_LENGTH(arr) (sizeof(arr) / sizeof((arr)[0]))
+
+static const char data[] = "abcdefghijklmopqrstuvwxyz-0123456789_ABCDEFGHIJKLMNOPQRSTUVWXYZ=";
 
 static void clock_setup(void)
 {
@@ -54,6 +60,8 @@ static void gpio_setup(void)
 static void uart_setup(void)
 {
 	/* Enable USART2 clock and configure for operations */
+	rcc_periph_clock_enable(RCC_USART2);
+
 	usart_set_oversampling(USART2, USART_OVERSAMPLING_16);
 	usart_set_baudrate(USART2, UART_BAUDRATE);
 	usart_set_databits(USART2, 8U);
@@ -73,6 +81,9 @@ int main(void)
 
 	while (true)
 	{
+		/* Loop through all the bytes sending them out the serial port one by one */
+		for (size_t idx = 0; idx < ARRAY_LENGTH(data) - 1U; ++idx)
+			usart_send_blocking(USART2, data[idx]);
 	}
 
 	return 0;
