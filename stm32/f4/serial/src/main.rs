@@ -11,6 +11,7 @@ use embassy_stm32::
     Config, Peri, Peripherals, mode::Blocking, peripherals, usart::{self, Uart}
 };
 use embassy_executor::Spawner;
+use defmt::info;
 // Magically inject the parts of the defmt machinary that are needed for doing defmt over RTT 🙃
 use defmt_rtt as _;
 // Magically inject #[panic_handler] so we get panic handling.. don't ask, it's absolutely magic how this can do that.
@@ -82,6 +83,7 @@ async fn main(_spawner: Spawner)
 	let peripherals = systemInit();
 	let resources = split_resources!(peripherals);
 
+	info!("Initialising USART2 and starting TX exercises");
 	let mut uart = uartInit(resources.uart);
 
 	loop
@@ -91,5 +93,6 @@ async fn main(_spawner: Spawner)
 			uart.blocking_write(&[*char])
 				.expect("Blocking UART write somehow failed - how the heck?!");
 		}
+		info!("Block complete, looping");
 	}
 }
