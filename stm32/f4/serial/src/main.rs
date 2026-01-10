@@ -30,7 +30,33 @@ assign_resources!
 
 fn systemInit() -> Peripherals
 {
-	let config = Config::default();
+	use embassy_stm32::rcc::
+	{
+		AHBPrescaler, APBPrescaler, Pll, PllMul, PllPDiv, PllPreDiv, PllQDiv, PllSource, Sysclk
+	};
+
+	let mut config = Config::default();
+	// Use the HSI as our PLL clock source
+	config.rcc.hsi = true;
+	config.rcc.pll_src = PllSource::HSI;
+	// And the PLL as our SysClk source
+	config.rcc.sys = Sysclk::PLL1_P;
+	// Set up the PLL to spin our input clock from the HSI up to 96MHz
+	config.rcc.pll = Some(
+		Pll
+		{
+			prediv: PllPreDiv::DIV16,
+			mul: PllMul::MUL336,
+			divp: Some(PllPDiv::DIV4),
+			divq: Some(PllQDiv::DIV7),
+			divr: None
+		}
+	);
+	// Set up the prescalers so we don't overdrive anything
+	config.rcc.ahb_pre = AHBPrescaler::DIV1;
+	config.rcc.apb1_pre = APBPrescaler::DIV2;
+	config.rcc.apb2_pre = APBPrescaler::DIV1;
+
 	embassy_stm32::init(config)
 }
 
