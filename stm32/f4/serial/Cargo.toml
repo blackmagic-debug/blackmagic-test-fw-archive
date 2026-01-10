@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: BSD-3-Clause
+
+[package]
+name = "stm32f410-serial"
+version = "0.1.0"
+license = "BSD-3-Clause"
+authors = ["Rachel Mant <git@dragonmux.network>"]
+edition = "2024"
+#default-target = "thumbv7em-none-eabi"
+
+[dependencies]
+embassy-stm32 = { git = "https://github.com/embassy-rs/embassy", features = ["defmt", "memory-x", "stm32f410rb", "unstable-pac"] }
+embassy-usb = { git = "https://github.com/embassy-rs/embassy", features = ["defmt"] }
+embassy-executor = { git = "https://github.com/embassy-rs/embassy", features = ["defmt", "arch-cortex-m", "executor-thread"] }
+
+defmt = "1.0.1"
+defmt-rtt = "1.0.0"
+
+cortex-m-rt = "0.7.5"
+assign-resources = "0.5.0"
+panic-probe = { version = "1.0.0", features = ["print-defmt"] }
+
+[[bin]]
+name = "stm32f410-serial"
+test = false
+doctest = false
+bench = false

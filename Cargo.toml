@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: BSD-3-Clause
+
+[workspace]
+resolver = "2"
+members = [
+	"stm32/f4/serial"
+]
+
+[profile.dev]
+# For development builds, run with no optimisations
+opt-level = 0
+# Have the compiler output full debug info
+debug = 'full'
+# Enable all debug assertions for full runtime validation
+debug-assertions = true
+# Enable all overflow checks so integer overflow causes panics
+overflow-checks = true
+# Run thin LTO with incremental linking for speed
+lto = 'thin'
+incremental = true
+# Use a few codegen units so we can get through this step faster
+codegen-units = 4
+
+[profile.release]
+# For release builds, run with all optimisations
+opt-level = 3
+# Have the compiler output full debug info but split out into its own file
+debug = 'full'
+split-debuginfo = 'packed'
+# Disable all debug assertions (it's a release build!)
+debug-assertions = false
+# Disable all overflow checks (again, it's a release build!)
+overflow-checks = false
+# Run full LTO with no incremental linking so we get the best possible results
+lto = 'fat'
+incremental = false
+# Do not use code generation unit splitting so we can get the best possible codegen
+codegen-units = 1

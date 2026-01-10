@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: BSD-3-Clause
+
+[toolchain]
+channel = "stable"
+profile = "minimal"
+components = [ "rust-src", "rustfmt", "llvm-tools" ]
+targets = [
+	"thumbv7em-none-eabi"
+]
