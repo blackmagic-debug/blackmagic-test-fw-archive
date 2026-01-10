@@ -19,6 +19,6 @@
 
 BINARY = serial
 
-LDSCRIPT = ../stm32f4.ld
+LDSCRIPT = ../stm32f410.ld
 
 include ../Makefile.include
